@@ -16,10 +16,12 @@ A small Python3 script uploads the hex-intel code to the emulated ROM.
 
 Usage:
 
-	sh .asm.sh Z80Monitor.asm
+	sh ./asm.sh Z80Monitor.asm
 	python3 'romEmuFeed.py' 'Z80Monitor.hex' 2000
 
 The second argument of the script compensates for the target address in the hex intel file with respect to the address
 in the RAM. This is different for the Arduino/RAM and the location in the Z80 address space.
+
+The license is MIT, as the existing monitor code uses this.
 
 fjkraan@electrickery.nl, 20201226
