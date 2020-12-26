@@ -1,8 +1,11 @@
 Simple Z80 serial monitor
 
 This is a learning project for getting a serial monitor working on a modified Multitech MPF-1 Single Board Computer
-based on the Z80 microprocessor. Modification so far are limited to adding a Z80 DART serial interface chip. Also part 
-of the project is building a working software development and deployment environment.
+based on the Z80 microprocessor. 
+
+![Modification of the MPF-1(B)](./MPF-Z80DART.pdf)
+
+Also part of the project is building a working software development and deployment environment.
 
 The starting point for the monitor is the monitor from: https://github.com/MatthewWCook/Z80Project/tree/master/Z80%20Monitor%20Part%201/Code. Only some addresses had to be changed and the 16550 UART file replaced by Z80 DART code.
 
