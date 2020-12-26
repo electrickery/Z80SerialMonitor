@@ -1,7 +1,7 @@
 ;***************************************************************************
 ;  PROGRAM:			Z80 Monitor        
 ;  PURPOSE:			ROM Monitor Program
-;  ASSEMBLER:		TASM 3.2        
+;  ASSEMBLER:		original: TASM 3.2 , converted to z80pack/z80asm
 ;  LICENCE:			The MIT Licence
 ;  AUTHOR :			MCook
 ;  CREATE DATE :	05 May 15

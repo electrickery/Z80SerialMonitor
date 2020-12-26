@@ -1,7 +1,7 @@
 ;***************************************************************************
 ;  PROGRAM:			CONIO       
 ;  PURPOSE:			Subroutines for console I/O
-;  ASSEMBLER:		TASM 3.2        
+;  ASSEMBLER:		original: TASM 3.2 , converted to z80pack/z80asm
 ;  LICENCE:			The MIT Licence
 ;  AUTHOR :			MCook
 ;  CREATE DATE :	19 May 15

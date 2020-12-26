@@ -1,7 +1,7 @@
 ;***************************************************************************
 ;  PROGRAM:			MONCommands        
 ;  PURPOSE:			Subroutines for all monitor commands
-;  ASSEMBLER:		TASM 3.2        
+;  ASSEMBLER:		original: TASM 3.2 , converted to z80pack/z80asm
 ;  LICENCE:			The MIT Licence
 ;  AUTHOR :			MCook
 ;  CREATE DATE :	06 May 15
