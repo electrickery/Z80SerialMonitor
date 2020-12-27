@@ -30,6 +30,7 @@ in the RAM. This is different for the Arduino/RAM and the location in the Z80 ad
 The license is MIT, as the existing monitor code uses this.
 
 Changes made to the dump command:
+
 ![Changes in Dump command](./Z80MonNewDump.png)
 
 A planned change is to add upload hex-intel via the monitor. But I'll need some more memory for this :-).
