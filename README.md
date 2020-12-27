@@ -3,6 +3,8 @@ Simple Z80 serial monitor
 This is a learning project for getting a serial monitor working on a modified Multitech MPF-1 Single Board Computer
 based on the Z80 microprocessor. 
 
+![Development setup including MPF-1B with Z80 DART modification, ROMEmu in U7 ROM socket, pl2303 serial-USB converter.](MPF1DevSetup.jpg)
+
 ![Modification of the MPF-1(B)](./MPF-Z80DART.pdf)
 
 Also part of the project is building a working software development and deployment environment.
