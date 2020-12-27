@@ -9,8 +9,10 @@
 
 ROM_BOTTOM:  EQU    0000h				;Bottom address of ROM
 ROM_TOP:     EQU    07FFh				;Top address of ROM
-RAM_BOTTOM:  EQU    1800h  			;Bottom address of RAM
+RAM_BOTTOM:  EQU    1800h				;Bottom address of RAM
 RAM_TOP:     EQU    19FFh				;Top address of RAM	
+ASCDMPBUF:   EQU    1810h				;Buffer to construct ASCII part of memory dump
+ASCDMPEND:   EQU    1820h				;End of buffer, full with EOS
 
 EOS:         EQU    0FFh            	;End of string
 

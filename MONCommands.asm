@@ -7,6 +7,8 @@
 ;  CREATE DATE :	06 May 15
 ;***************************************************************************
 
+HEXLINES:	EQU	16
+
 ;***************************************************************************
 ;HELP_COMMAND
 ;Function: Print help dialogue box
@@ -37,23 +39,24 @@ HELP_COMMAND:
 ;***************************************************************************
 MDC_1: DEFB 'Memory Dump Command', 0Dh, 0Ah, EOS
 MDC_2: DEFB 'Location to start in 4 digit HEX:',EOS
-MDC_3: DEFB '     00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F', 0Dh, 0Ah, EOS
+MDC_3: DEFB '      0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F', 0Dh, 0Ah, EOS
 
 MDCMD:
 			LD 		HL,MDC_1			;Print some messages 
 			CALL    PRINT_STRING
 			LD 		HL,MDC_2	
 			CALL    PRINT_STRING
-			CALL    GETHEXWORD		;HL now points to databyte location	
+			CALL    GETHEXWORD			;HL now points to databyte location	
 			PUSH	HL					;Save HL that holds databyte location on stack
 			CALL    PRINT_NEW_LINE		;Print some messages
 			CALL    PRINT_NEW_LINE
 			LD 		HL,MDC_3	
 			CALL    PRINT_STRING
-			CALL    PRINT_NEW_LINE
+;			CALL    PRINT_NEW_LINE
 			POP		HL					;Restore HL that holds databyte location on stack
-			LD		C,10				;Register C holds counter of dump lines to print
+			LD		C,HEXLINES			;Register C holds counter of dump lines to print
 MDLINE:	
+			LD		DE,	ASCDMPBUF
 			LD		B,16				;Register B holds counter of dump bytes to print
 			CALL	PRINTHWORD			;Print dump line address in hex form
 			LD		A,' '				;Print spacer
@@ -62,13 +65,34 @@ MDLINE:
 MDBYTES:
 			LD		A,(HL)				;Load Acc with databyte HL points to
 			CALL	PRINTHBYTE  		;Print databyte in HEX form 
+			CALL	CHAR2BUF			;Store ASCII char
 			LD		A,' '				;Print spacer
 			CALL	PRINT_CHAR	
 			INC 	HL					;Increase HL to next address pointer
 			DJNZ	MDBYTES				;Print 16 bytes out since B holds 16
+			
+			LD		A,' '				;Print spacer
+			CALL	PRINT_CHAR			;
+			LD		A, EOS
+			LD		(ASCDMPEND), A		;Make sure there is a EOS
+
+			PUSH	HL
+			LD		HL, ASCDMPBUF		;Point HL to ASCII buffer
+			CALL    PRINT_STRING		;Print buffer
+			POP		HL
+			
 			LD		B,C					;Load B with C to keep track of number of lines printed
 			CALL    PRINT_NEW_LINE		;Get ready for next dump line
-			DJNZ	MDLINE				;Print 10 line out since C holds 10 and we load B with C
-			LD		A,0FFh				;Load $FF into Acc so MON_COMMAND finishes
+			DJNZ	MDLINE				;Print 16 line out since C holds 16 and we load B with C
+			LD		A,EOS				;Load $FF into Acc so MON_COMMAND finishes
+
 			RET
 			
+			
+CHAR2BUF:
+			CALL	MKPRINT
+			LD		(DE), A
+			INC		DE
+			RET
+
+

@@ -43,6 +43,21 @@ TO_UPPER:
             RET     NC              	; Nothing to do, either
             AND     5Fh             	; Convert to upper case
             RET		
+            
+;***************************************************************************
+;MKPRINT
+;Function: Make character printable by replacing control-chars to '.'
+;***************************************************************************
+LOWPRTV:	EQU		' '
+HIGPRTV:	EQU		'~'
+MKPRINT:
+			CP		LOWPRTV
+			JR		C, ADDOT
+			CP		HIGPRTV
+			JR		NC, ADDOT
+			RET
+ADDOT:		LD		A, '.'
+			RET
 			
 ;***************************************************************************
 ;PRINT_NEW_LINE
