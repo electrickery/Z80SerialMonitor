@@ -17,8 +17,12 @@ HELPMSG1: DEFB 'ZMC80 Monitor Command List', 0Dh, 0Ah, EOS
 HELPMSG2: DEFB '? - view command list', 0Dh, 0Ah, EOS
 HELPMSG3: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HELPMSG4: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
-HELPMSG5: DEFB 'D - print $80 bytes from specified location', 0Dh, 0Ah, EOS
-HELPMSG6: DEFB 'M - copy bytes  in memory', 0Dh, 0Ah, EOS
+HELPMSG5: DEFB 'D - print $FF bytes from specified location', 0Dh, 0Ah, EOS
+HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
+HELPMSG7: DEFB 'F - memory range with value', 0Dh, 0Ah, EOS
+HELPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
+HELPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
+
 
 HELP_COMMAND:
 			LD 		HL,HELPMSG1		;Print some messages
@@ -32,6 +36,8 @@ HELP_COMMAND:
 			LD 		HL,HELPMSG5		
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSG6		
+			CALL    PRINT_STRING
+			LD 		HL,HELPMSG7		
 			CALL    PRINT_STRING
 			LD		A, EOS				;Load $FF into Acc so MON_COMMAND finishes
 			RET
@@ -51,6 +57,7 @@ MDCMD:
 			CALL    PRINT_STRING
 			
 			CALL    GETHEXWORD			;HL now points to databyte location	
+			LD		(DMPADDR), HL		;Keep address for next/prev.
 			PUSH	HL					;Save HL that holds databyte location on stack
 			CALL    PRINT_NEW_LINE		;Print some messages
 			CALL    PRINT_NEW_LINE
@@ -58,7 +65,7 @@ MDCMD:
 			CALL    PRINT_STRING
 ;			CALL    PRINT_NEW_LINE
 			POP		HL					;Restore HL that holds databyte location on stack
-			LD		C,HEXLINES			;Register C holds counter of dump lines to print
+MDNXTPR:	LD		C,HEXLINES			;Register C holds counter of dump lines to print
 MDLINE:	
 			LD		DE,	ASCDMPBUF
 			LD		B,16				;Register B holds counter of dump bytes to print
@@ -100,7 +107,7 @@ CHAR2BUF:
 
 ;***************************************************************************
 ;MEMORY_MOVE_COMMAND
-;Function: Copy memory blocks in memory
+;Function: Copy data blocks in memory
 ;***************************************************************************
 MVC_1:	DEFB	'Move Data Command', 0Dh, 0Ah, EOS
 MVC_S:	DEFB	'Start Location: ', EOS
@@ -172,4 +179,73 @@ GETP:
 ;***************************************************************************
 ; End copy from MPF-1(B) Monitor
 ;***************************************************************************
-			;			
+
+;***************************************************************************
+; Memory Fill Command
+; Function: Fill a memory block
+;***************************************************************************
+
+MFC_1:	DEFB	'Fill Memory Command', 0Dh, 0Ah, EOS
+MFC_D:	DEFB	'Data value (one byte): ', EOS
+
+FILL_COMMAND:
+			LD		HL, MFC_1	; Print some messages
+			CALL	PRINT_STRING
+			
+			LD		HL, MVC_S
+			CALL	PRINT_STRING
+			CALL	GETHEXWORD
+			LD		(MVADDR), HL
+			CALL	PRINT_NEW_LINE
+			
+			LD		HL, MVC_E
+			CALL	PRINT_STRING
+			CALL	GETHEXWORD
+			LD		(MVADDR+2), HL
+			CALL	PRINT_NEW_LINE
+			
+			LD		HL, MFC_D
+			CALL	PRINT_STRING
+			CALL	GETHEXBYTE
+			LD		(MVADDR+4), A
+			CALL	PRINT_NEW_LINE
+
+			LD		DE, (MVADDR)
+			LD		HL, (MVADDR+2)
+			SBC		HL, DE
+			LD		B, H
+			LD		C, L
+			LD		A, (MVADDR+4)
+			LD		HL, (MVADDR)
+			LD		(HL), A
+			LD		DE, (MVADDR)
+			INC		DE
+			LDIR
+			RET
+
+;***************************************************************************
+; Next Page Memory Dump Command
+; Function: Print the next block of memory
+;***************************************************************************
+
+NEXTP_COMMAND:
+			LD 		HL,MDC_3	
+			CALL    PRINT_STRING
+			LD		HL, (DMPADDR)
+			INC		H
+			LD		(DMPADDR), HL
+			JP		MDNXTPR
+
+;***************************************************************************
+; Previous Page Memory Dump Command
+; Function: Print the previous block of memory
+;***************************************************************************
+
+PREVP_COMMAND:
+			LD 		HL,MDC_3	
+			CALL    PRINT_STRING
+			LD		HL, (DMPADDR)
+			DEC		H
+			LD		(DMPADDR), HL
+			JP		MDNXTPR
+

@@ -7,19 +7,20 @@
 ;  CREATE DATE :	05 May 15
 ;***************************************************************************
 
-ROM_BOTTOM:  EQU    0000h				;Bottom address of ROM
-ROM_TOP:     EQU    07FFh				;Top address of ROM
+ROM_BOTTOM:  EQU    0000h		;Bottom address of ROM
+ROM_TOP:     EQU    07FFh		;Top address of ROM
 
-RAM_BOTTOM:  EQU    1800h				;Bottom address of RAM
-RAM_TOP:     EQU    19FFh				;Top address of RAM	
+RAM_BOTTOM:  EQU    1800h		;Bottom address of RAM
+RAM_TOP:     EQU    19FFh		;Top address of RAM	
 
 MPFMON:      EQU    0030h
-ASCDMPBUF:   EQU    1810h				;Buffer to construct ASCII part of memory dump
-ASCDMPEND:   EQU    1820h				;End of buffer, fill with EOS
-MVADDR:      EQU    1821h
+ASCDMPBUF:   EQU    1810h		;Buffer to construct ASCII part of memory dump
+ASCDMPEND:   EQU    1820h		;End of buffer, fill with EOS
+DMPADDR:     EQU    1821h		;Last dump address
+MVADDR:      EQU    1823h 		; 6 bytes: start-address, end-address, dest-address of fill-value
 
 
-EOS:         EQU    0FFh            	;End of string
+EOS:         EQU    0FFh		;End of string
 
 ;			ORG 0000h
 
@@ -46,6 +47,9 @@ MAIN:
 			LD		SP,RAM_TOP			;Load the stack pointer for stack operations.
 			CALL	UART_INIT			;Initialize UART
 			CALL	PRINT_MON_HDR		;Print the monitor header info
+			LD		A, 00h
+			LD		(DMPADDR), A
+			LD		(DMPADDR+1), A
 			CALL    MON_PROMPT_LOOP		;Monitor user prompt loop
 			HALT
 
@@ -55,10 +59,10 @@ MAIN:
 ;***************************************************************************
 MON_CLS: DEFB 0Ch, EOS  				;Escape sequence for CLS. (aka form feed) 
 		
-CLEAR_SCREEN:		
-			LD 		HL,MON_CLS			
+CLEAR_SCREEN:
+			LD 		HL,MON_CLS
 			CALL    PRINT_STRING
-			RET			
+			RET
 			
 ;***************************************************************************
 ;RESET_COMMAND
@@ -120,6 +124,12 @@ MON_COMMAND:
 			CALL	Z,RESET_COMMAND
 			CP		'M'
 			CALL	Z,MOVE_COMMAND
+			CP		'F'
+			CALL	Z,FILL_COMMAND
+			CP		'+'
+			CALL	Z,NEXTP_COMMAND
+			CP		'-'
+			CALL	Z,PREVP_COMMAND
 			RET
 			
 ERROR:

@@ -8,7 +8,7 @@ import time
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)  # open serial port
 LF = "\n"
 hexOffsetStr = ""
-sendDelay = 0.1
+sendDelay = 0.05
 time.sleep(sendDelay)
 print(ser.readline())
 
