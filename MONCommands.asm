@@ -18,6 +18,7 @@ HELPMSG2: DEFB '? - view command list', 0Dh, 0Ah, EOS
 HELPMSG3: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HELPMSG4: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
 HELPMSG5: DEFB 'D - print $80 bytes from specified location', 0Dh, 0Ah, EOS
+HELPMSG6: DEFB 'M - copy bytes  in memory', 0Dh, 0Ah, EOS
 
 HELP_COMMAND:
 			LD 		HL,HELPMSG1		;Print some messages
@@ -30,7 +31,9 @@ HELP_COMMAND:
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSG5		
 			CALL    PRINT_STRING
-			LD		A,0FFh				;Load $FF into Acc so MON_COMMAND finishes
+			LD 		HL,HELPMSG6		
+			CALL    PRINT_STRING
+			LD		A, EOS				;Load $FF into Acc so MON_COMMAND finishes
 			RET
 
 ;***************************************************************************
@@ -88,12 +91,79 @@ MDBYTES:
 			LD		A,EOS				;Load $FF into Acc so MON_COMMAND finishes
 
 			RET
-			
-			
+
 CHAR2BUF:
 			CALL	MKPRINT
 			LD		(DE), A
 			INC		DE
 			RET
 
+;***************************************************************************
+;MEMORY_MOVE_COMMAND
+;Function: Copy memory blocks in memory
+;***************************************************************************
+MVC_1:	DEFB	'Move Data Command', 0Dh, 0Ah, EOS
+MVC_S:	DEFB	'Start Location', 0Dh, 0Ah, EOS
+MVC_E:	DEFB	'End Location', 0Dh, 0Ah, EOS
+MVC_D:	DEFB	'Destination Location', 0Dh, 0Ah, EOS
 
+MOVE_COMMAND:
+			LD		HL, MDC_1	; Print some messages
+			CALL	PRINT_STRING
+			
+			LD		HL, MVC_S
+			CALL	PRINT_STRING
+			CALL	GETHEXWORD
+			LD		(MVADDR), HL
+			CALL	PRINT_NEW_LINE
+			
+			LD		HL, MVC_E
+			CALL	PRINT_STRING
+			CALL	GETHEXWORD
+			LD		(MVADDR+2), HL
+			CALL	PRINT_NEW_LINE
+			
+			LD		HL, MVC_D
+			CALL	PRINT_STRING
+			CALL	GETHEXWORD
+			LD		(MVADDR+4), HL
+			CALL	PRINT_NEW_LINE
+			
+			ld		hl, MVADDR
+			call	GETP	; Fix BC contents from address, to size
+			jp		c, ERROR
+			ld		de, (MVADDR+4)
+			sbc		hl, de
+			jr		nc, MVUP
+			ex		de, hl
+			add		hl, bc
+			dec		hl
+			ex		de, hl
+			ld		hl, (MVADDR+2)
+			lddr
+			inc		de
+			jp		MON_PRMPT_LOOP
+MVUP:
+			add		hl,de
+			ldir
+			dec		de
+			jp		MON_PRMPT_LOOP
+			
+			
+GETP:	; Copy from MPF-1(B) Monitor
+			ld		e, (hl) ; MVADDR
+			inc		hl
+			ld		d, (hl) ; MVADDR+1
+			inc		hl
+			ld		c, (hl) ; MVADDR+2
+			inc		hl
+			ld		h, (hl) ; MVADDR+3
+			ld		l, c
+			or		a
+			sbc		hl, de
+			ld		c, l
+			ld		b, h
+			inc		bc
+			ex		de, hl
+			ret	
+			;			

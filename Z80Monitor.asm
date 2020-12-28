@@ -15,7 +15,9 @@ RAM_TOP:     EQU    19FFh				;Top address of RAM
 
 MPFMON:      EQU    0030h
 ASCDMPBUF:   EQU    1810h				;Buffer to construct ASCII part of memory dump
-ASCDMPEND:   EQU    1820h				;End of buffer, full with EOS
+ASCDMPEND:   EQU    1820h				;End of buffer, fill with EOS
+MVADDR:      EQU    1821h
+
 
 EOS:         EQU    0FFh            	;End of string
 
@@ -69,10 +71,11 @@ RESET_COMMAND:
 ;PRINT_MON_HDR
 ;Function: Print out program header info
 ;***************************************************************************
-MON_MSG: DEFB 0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, '2015 MCook', EOS
-MONMSG2: DEFB 0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, 09h, '2020 F.J.Kraan', 0Dh, 0Ah, EOS
-MON_VER: DEFB 'ROM Monitor v0.2', 0Dh, 0AH, 0Dh, 0AH, EOS
-MON_HLP: DEFB 09h,' Input ? for command list', 0Dh, 0AH, EOS
+MON_MSG:	DEFB	0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, '2015 MCook', EOS
+MONMSG2:	DEFB	0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, 09h, '2020 F.J.Kraan', 0Dh, 0Ah, EOS
+MON_VER:	DEFB	'ROM Monitor v0.2', 0Dh, 0AH, 0Dh, 0AH, EOS
+MON_HLP:	DEFB	09h,' Input ? for command list', 0Dh, 0AH, EOS
+MON_ERR:	DEFB	'Error in params', 0Dh, 0AH, EOS
 
 PRINT_MON_HDR:
 			CALL	CLEAR_SCREEN		;Clear the terminal screen
@@ -115,7 +118,14 @@ MON_COMMAND:
 			CALL  	Z,CLEAR_SCREEN
 			CP		'R'
 			CALL	Z,RESET_COMMAND
+			CP		'M'
+			CALL	Z,MOVE_COMMAND
 			RET
+			
+ERROR:
+			LD		HL, MON_ERR
+			CALL    PRINT_STRING
+			JP		MON_PRMPT_LOOP
 			
 			INCLUDE	DARTDriver.asm
 			INCLUDE	MONCommands.asm
