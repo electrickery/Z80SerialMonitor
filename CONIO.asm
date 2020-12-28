@@ -46,7 +46,7 @@ TO_UPPER:
             
 ;***************************************************************************
 ;MKPRINT
-;Function: Make character printable by replacing control-chars to '.'
+;Function: Make all characters printable by replacing control-chars with '.'
 ;***************************************************************************
 LOWPRTV:	EQU		' '
 HIGPRTV:	EQU		'~'

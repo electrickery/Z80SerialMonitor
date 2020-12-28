@@ -46,6 +46,7 @@ MDCMD:
 			CALL    PRINT_STRING
 			LD 		HL,MDC_2	
 			CALL    PRINT_STRING
+			
 			CALL    GETHEXWORD			;HL now points to databyte location	
 			PUSH	HL					;Save HL that holds databyte location on stack
 			CALL    PRINT_NEW_LINE		;Print some messages

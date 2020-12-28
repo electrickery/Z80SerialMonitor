@@ -9,8 +9,11 @@
 
 ROM_BOTTOM:  EQU    0000h				;Bottom address of ROM
 ROM_TOP:     EQU    07FFh				;Top address of ROM
+
 RAM_BOTTOM:  EQU    1800h				;Bottom address of RAM
 RAM_TOP:     EQU    19FFh				;Top address of RAM	
+
+MPFMON:      EQU    0030h
 ASCDMPBUF:   EQU    1810h				;Buffer to construct ASCII part of memory dump
 ASCDMPEND:   EQU    1820h				;End of buffer, full with EOS
 
@@ -60,19 +63,22 @@ CLEAR_SCREEN:
 ;Function: Software Reset to $0000
 ;***************************************************************************
 RESET_COMMAND:
-			JP		START				;Jumps to $0000 (reset)	
+			JP		MPFMON				;Jumps to $0030 (MPF-1 monitor re-entry)	
 			
 ;***************************************************************************
 ;PRINT_MON_HDR
 ;Function: Print out program header info
 ;***************************************************************************
-MON_MSG: DEFB 0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, '2015 MCook', 0Dh, 0AH, 0Dh, 0Ah, EOS
-MON_VER: DEFB 'ROM Monitor v0.1', 0Dh, 0AH, 0Dh, 0AH, EOS
+MON_MSG: DEFB 0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, '2015 MCook', EOS
+MONMSG2: DEFB 0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, 09h, '2020 F.J.Kraan', 0Dh, 0Ah, EOS
+MON_VER: DEFB 'ROM Monitor v0.2', 0Dh, 0AH, 0Dh, 0AH, EOS
 MON_HLP: DEFB 09h,' Input ? for command list', 0Dh, 0AH, EOS
 
 PRINT_MON_HDR:
 			CALL	CLEAR_SCREEN		;Clear the terminal screen
 			LD 		HL,MON_MSG			;Print some messages
+			CALL    PRINT_STRING	
+			LD 		HL,MONMSG2			;Print some extra message
 			CALL    PRINT_STRING	
 			LD 		HL,MON_VER
 			CALL    PRINT_STRING
