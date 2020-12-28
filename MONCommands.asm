@@ -41,7 +41,7 @@ HELP_COMMAND:
 ;Function: Print $80 databytes from specified location
 ;***************************************************************************
 MDC_1: DEFB 'Memory Dump Command', 0Dh, 0Ah, EOS
-MDC_2: DEFB 'Location to start in 4 digit HEX:',EOS
+MDC_2: DEFB 'Location to start in 4 digit HEX: ',EOS
 MDC_3: DEFB '      0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F', 0Dh, 0Ah, EOS
 
 MDCMD:
@@ -103,9 +103,9 @@ CHAR2BUF:
 ;Function: Copy memory blocks in memory
 ;***************************************************************************
 MVC_1:	DEFB	'Move Data Command', 0Dh, 0Ah, EOS
-MVC_S:	DEFB	'Start Location', 0Dh, 0Ah, EOS
-MVC_E:	DEFB	'End Location', 0Dh, 0Ah, EOS
-MVC_D:	DEFB	'Destination Location', 0Dh, 0Ah, EOS
+MVC_S:	DEFB	'Start Location: ', EOS
+MVC_E:	DEFB	'End Location: ', EOS
+MVC_D:	DEFB	'Destination Location: ', EOS
 
 MOVE_COMMAND:
 			LD		HL, MDC_1	; Print some messages
@@ -129,6 +129,9 @@ MOVE_COMMAND:
 			LD		(MVADDR+4), HL
 			CALL	PRINT_NEW_LINE
 			
+;***************************************************************************
+; Adapted copy from MPF-1(B) Monitor
+;***************************************************************************
 			ld		hl, MVADDR
 			call	GETP	; Fix BC contents from address, to size
 			jp		c, ERROR
@@ -150,7 +153,7 @@ MVUP:
 			jp		MON_PRMPT_LOOP
 			
 			
-GETP:	; Copy from MPF-1(B) Monitor
+GETP:
 			ld		e, (hl) ; MVADDR
 			inc		hl
 			ld		d, (hl) ; MVADDR+1
@@ -166,4 +169,7 @@ GETP:	; Copy from MPF-1(B) Monitor
 			inc		bc
 			ex		de, hl
 			ret	
+;***************************************************************************
+; End copy from MPF-1(B) Monitor
+;***************************************************************************
 			;			

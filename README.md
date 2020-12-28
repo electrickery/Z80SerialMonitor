@@ -33,6 +33,6 @@ Changes made to the dump command:
 
 ![Changes in Dump command](./Z80MonNewDump.png)
 
-A planned change is to add upload hex-intel via the monitor. But I'll need some more memory for this :-).
+A planned change is to add upload hex-intel via the monitor.
 
-fjkraan@electrickery.nl, 20201227
+fjkraan@electrickery.nl, 20201228
