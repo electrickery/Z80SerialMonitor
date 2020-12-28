@@ -108,7 +108,7 @@ MVC_E:	DEFB	'End Location: ', EOS
 MVC_D:	DEFB	'Destination Location: ', EOS
 
 MOVE_COMMAND:
-			LD		HL, MDC_1	; Print some messages
+			LD		HL, MVC_1	; Print some messages
 			CALL	PRINT_STRING
 			
 			LD		HL, MVC_S
