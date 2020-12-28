@@ -29,6 +29,10 @@ in the RAM. This is different for the Arduino/RAM and the location in the Z80 ad
 
 The license is MIT, as the existing monitor code uses this.
 
+Startup banner and help:
+
+![Startup banner and help](./Z80MonBannerHelp.png)
+
 Changes made to the dump command:
 
 ![Changes in Dump command](./Z80MonNewDump.png)

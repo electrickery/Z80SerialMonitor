@@ -19,7 +19,7 @@ HELPMSG3: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HELPMSG4: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
 HELPMSG5: DEFB 'D - print $FF bytes from specified location', 0Dh, 0Ah, EOS
 HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
-HELPMSG7: DEFB 'F - memory range with value', 0Dh, 0Ah, EOS
+HELPMSG7: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
 HELPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HELPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
 
