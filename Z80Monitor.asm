@@ -49,6 +49,7 @@ MAIN:
 			CALL	PRINT_MON_HDR		;Print the monitor header info
 			LD		A, 00h
 			LD		(DMPADDR), A
+			LD		A, 0FFh				; FF00h and next should result in 0000h
 			LD		(DMPADDR+1), A
 			CALL    MON_PROMPT_LOOP		;Monitor user prompt loop
 			HALT
