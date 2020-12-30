@@ -15,14 +15,14 @@ HEXLINES:	EQU	17 ; FIXIT: There is a off-by-one-here
 ;***************************************************************************
 HELPMSG1: DEFB 'ZMC80 Monitor Command List', 0Dh, 0Ah, EOS
 HELPMSG2: DEFB '? - view command list', 0Dh, 0Ah, EOS
-HELPMSG3: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HELPMSG4: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
 HELPMSG5: DEFB 'D - print $FF bytes from specified location', 0Dh, 0Ah, EOS
-HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
+HELPMSGa: DEFB 'E - edit bytes in memory', 0Dh, 0Ah, EOS
 HELPMSG7: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
+HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
+HELPMSG3: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HELPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HELPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
-HELPMSGa: DEFB '- - edit bytes in memory', 0Dh, 0Ah, EOS
 HELPMSGf: DEFB ': - upload Hex-Intel record', 0Dh, 0Ah, EOS
 
 
@@ -31,21 +31,21 @@ HELP_COMMAND:
 			CALL    PRINT_STRING		
 			LD 		HL,HELPMSG2		
 			CALL    PRINT_STRING			
-			LD 		HL,HELPMSG3		
-			CALL    PRINT_STRING
 			LD 		HL,HELPMSG4		
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSG5		
 			CALL    PRINT_STRING
-			LD 		HL,HELPMSG6		
+			LD 		HL,HELPMSGa		
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSG7		
+			CALL    PRINT_STRING
+			LD 		HL,HELPMSG6		
+			CALL    PRINT_STRING
+			LD 		HL,HELPMSG3		
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSG8		
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSG9		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSGa		
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSGf		
 			CALL    PRINT_STRING
