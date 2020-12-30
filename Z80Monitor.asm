@@ -136,6 +136,8 @@ MON_COMMAND:	; Inserted ERROR_CHK for all commands requiring input
 			CALL	Z,NEXTP_COMMAND
 			CP		'-'
 			CALL	Z,PREVP_COMMAND
+			CP		'E'
+			CALL	Z,EDIT_COMMAND
 			CP		':'
 			CALL	Z,INTLIN_CMD
 			CALL	ERROR_CHK

@@ -22,7 +22,8 @@ HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HELPMSG7: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
 HELPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HELPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
-HELPMSGa: DEFB ': - upload Hex-Intel record', 0Dh, 0Ah, EOS
+HELPMSGa: DEFB '- - edit bytes in memory', 0Dh, 0Ah, EOS
+HELPMSGf: DEFB ': - upload Hex-Intel record', 0Dh, 0Ah, EOS
 
 
 HELP_COMMAND:
@@ -45,6 +46,8 @@ HELP_COMMAND:
 			LD 		HL,HELPMSG9		
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSGa		
+			CALL    PRINT_STRING
+			LD 		HL,HELPMSGf		
 			CALL    PRINT_STRING
 			LD		A, EOS				;Load $FF into Acc so MON_COMMAND finishes
 			RET
@@ -290,6 +293,48 @@ PREVP_COMMAND:
 			DEC		H
 			LD		(DMPADDR), HL
 			JP		MDNXTPR
+
+;***************************************************************************
+; Edit Memory Command
+; Function: Edit bytes in memory
+;***************************************************************************
+
+EDIT_COMMAND:
+			LD 		HL, MVC_S	; Start msg.
+			CALL    PRINT_STRING
+			
+			CALL	GETHEXWORD	; Get first address
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			
+EDIT_LP:	LD		A, ':'
+			CALL	PRINT_CHAR
+			LD		A, ' '
+			CALL	PRINT_CHAR
+			
+			LD		A, (HL)		; Print original value
+			CALL	PRINTHBYTE
+			
+			LD		A, '>'
+			CALL	PRINT_CHAR
+			LD		A, ' '
+			CALL	PRINT_CHAR
+			
+			CALL	GETHEXBYTE
+			LD		(MVADDR+4), A
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+
+			LD		A, (MVADDR+4)
+			LD		(HL), A		; Write new value
+			
+			CALL	PRINT_NEW_LINE
+			INC		HL
+			CALL	PRINTHWORD
+			JR		EDIT_LP		; Only way out is type a non-hex char...
+
 
 ;***************************************************************************
 ; Upload Hex-Intel records
