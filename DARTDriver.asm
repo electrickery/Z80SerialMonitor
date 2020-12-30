@@ -21,8 +21,8 @@ DRTCB:   EQU     063H
 
 ; useful patterns
 TXBUFEMPTY:     EQU     000000100b
-RXCHARAVL:      EQU     000000001b		
-		
+RXCHARAVL:      EQU     000000001b
+
 ;***************************************************************************
 ;UART_INIT
 ;Function: Initialize the UART to BAUD Rate 9600 (1.8432 MHz clock input)
@@ -53,8 +53,9 @@ DRTTB:
 DRTWR0:            DEFB   00000000b
 CHRES:             DEFB   00011100b
 DRTWR4:            DEFB   00000100b
-;X1+STOP1+NOPARITY: DEFB   00000100b
-X1+STOP2+NOPARITY: DEFB   00001100b
+;X16+STOP1+NOPARITY: DEFB  01000100b
+X1+STOP1+NOPARITY: DEFB   00000100b
+;X1+STOP2+NOPARITY: DEFB   00001100b
 DRTWR5:            DEFB   00000101b
 TX8+TXEN:          DEFB   01101000b
 DRTWR3:            DEFB   00000011b

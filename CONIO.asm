@@ -103,44 +103,72 @@ CIH2:
 ;***************************************************************************
 GETHEXNIB:      
 			CALL	GET_CHAR
-            CALL    CHAR_ISHEX      	;Is it a hex digit?
-            JP      NC,GETHEXNIB 	 	;Yes - Jump / No - Continue
+            CALL    CHAR_ISHEX      	; Is it a hex digit?
+            JP      NC,NONHEXNIB 	 	; Yes - Continue / No - Exit
 			CALL    PRINT_CHAR
-			CP      '9' + 1         	;Is it a digit less or equal '9' + 1?
-            JP      C,GHN1 				;Yes - Jump / No - Continue
-            SUB     07h             	;Adjust for A-F digits
+			CP      '9' + 1         	; Is it a digit less or equal '9' + 1?
+            JP      C,GHN1 				; Yes - Jump / No - Continue
+            SUB     07h             	; Adjust for A-F digits
 GHN1:                
-			SUB     '0'             	;Subtract to get nib between 0->15
-            AND     0Fh             	;Only return lower 4 bits
-            RET	
-				
+			SUB     '0'             	; Subtract to get nib between 0->15
+            AND     0Fh             	; Only return lower 4 bits
+            RET
+NONHEXNIB:								; Allow exit on wrong char
+			LD		A, E_NOHEX
+			LD		(ERRFLAG), A		; Error flag
+			RET
+
 ;***************************************************************************
 ;GET_HEX_BTYE
 ;Function: Gets HEX byte into A
 ;***************************************************************************
 GETHEXBYTE:
-            CALL    GETHEXNIB			;Get high nibble
-            RLC     A					;Rotate nibble into high nibble
+            CALL    GETHEXNIB			; Get high nibble
+			PUSH	AF
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			JR		NZ, GHB_ERR
+			POP		AF
+            RLC     A					; Rotate nibble into high nibble
             RLC     A
             RLC     A
             RLC     A
-            LD      B,A					;Save upper four bits
-            CALL    GETHEXNIB			;Get lower nibble
-            OR      B					;Combine both nibbles
-            RET				
-			
+            LD      B,A					; Save upper four bits
+            CALL    GETHEXNIB			; Get lower nibble
+			PUSH	AF
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			JR		NZ, GHB_ERR  
+			POP		AF          
+            OR      B					; Combine both nibbles
+            RET
+GHB_ERR:
+			POP		AF
+			RET
+
 ;***************************************************************************
 ;GET_HEX_WORD
 ;Function: Gets two HEX bytes into HL
 ;***************************************************************************
 GETHEXWORD:
-			PUSH    AF
             CALL    GETHEXBYTE		;Get high byte
+            PUSH	AF
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			JR		NZ, GHW_ERR
+			POP		AF
             LD		H,A
             CALL    GETHEXBYTE    	;Get low byte
-            LD      L,A
+            PUSH	AF
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			JR		NZ, GHW_ERR
             POP     AF
+			LD      L,A
             RET
+GHW_ERR:
+			POP		AF
+			RET
 		
 ;***************************************************************************
 ;PRINT_HEX_NIB

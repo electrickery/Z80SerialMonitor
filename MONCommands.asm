@@ -22,6 +22,7 @@ HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HELPMSG7: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
 HELPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HELPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
+HELPMSGa: DEFB ': - upload Hex-Intel record', 0Dh, 0Ah, EOS
 
 
 HELP_COMMAND:
@@ -43,6 +44,8 @@ HELP_COMMAND:
 			CALL    PRINT_STRING
 			LD 		HL,HELPMSG9		
 			CALL    PRINT_STRING
+			LD 		HL,HELPMSGa		
+			CALL    PRINT_STRING
 			LD		A, EOS				;Load $FF into Acc so MON_COMMAND finishes
 			RET
 
@@ -61,6 +64,9 @@ MDCMD:
 			CALL    PRINT_STRING
 			
 			CALL    GETHEXWORD			;HL now points to databyte location	
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
 			LD		(DMPADDR), HL		;Keep address for next/prev.
 			PUSH	HL					;Save HL that holds databyte location on stack
 			CALL    PRINT_NEW_LINE		;Print some messages
@@ -125,18 +131,27 @@ MOVE_COMMAND:
 			LD		HL, MVC_S
 			CALL	PRINT_STRING
 			CALL	GETHEXWORD
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
 			LD		(MVADDR), HL
 			CALL	PRINT_NEW_LINE
 			
 			LD		HL, MVC_E
 			CALL	PRINT_STRING
 			CALL	GETHEXWORD
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
 			LD		(MVADDR+2), HL
 			CALL	PRINT_NEW_LINE
 			
 			LD		HL, MVC_D
 			CALL	PRINT_STRING
 			CALL	GETHEXWORD
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
 			LD		(MVADDR+4), HL
 			CALL	PRINT_NEW_LINE
 			
@@ -145,25 +160,28 @@ MOVE_COMMAND:
 ;***************************************************************************
 			ld		hl, MVADDR
 			call	GETP	; Fix BC contents from address, to size
-			jp		c, ERROR
+			jp		c, MERR
 			ld		de, (MVADDR+4)
 			sbc		hl, de
 			jr		nc, MVUP
-			ex		de, hl
+MVDN:		ex		de, hl
 			add		hl, bc
 			dec		hl
 			ex		de, hl
 			ld		hl, (MVADDR+2)
 			lddr
 			inc		de
-			jp		MON_PRMPT_LOOP
+			RET
 MVUP:
 			add		hl,de
 			ldir
 			dec		de
-			jp		MON_PRMPT_LOOP
-			
-			
+			RET;
+MERR:
+			LD		A, E_PARAM
+			LD		(ERRFLAG), A
+			RET;
+
 GETP:
 			ld		e, (hl) ; MVADDR
 			inc		hl
@@ -196,36 +214,56 @@ FILL_COMMAND:
 			LD		HL, MFC_1	; Print some messages
 			CALL	PRINT_STRING
 			
-			LD		HL, MVC_S
+			LD		HL, MVC_S	; Start msg.
 			CALL	PRINT_STRING
 			CALL	GETHEXWORD
-			LD		(MVADDR), HL
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			LD		(MVADDR), HL	; Start val.
 			CALL	PRINT_NEW_LINE
 			
-			LD		HL, MVC_E
+			LD		HL, MVC_E	; End msg.
 			CALL	PRINT_STRING
 			CALL	GETHEXWORD
-			LD		(MVADDR+2), HL
+			LD		(MVADDR+2), HL	; End val.
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			
+			LD		DE, (MVADDR)	; Start
+			SBC		HL, DE		; Make sure end is past start...
+			JR		C, F_ORDERR
+			LD		HL, (MVADDR+2)
 			CALL	PRINT_NEW_LINE
 			
 			LD		HL, MFC_D
 			CALL	PRINT_STRING
 			CALL	GETHEXBYTE
 			LD		(MVADDR+4), A
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
 			CALL	PRINT_NEW_LINE
 
-			LD		DE, (MVADDR)
-			LD		HL, (MVADDR+2)
-			SBC		HL, DE
+			LD		DE, (MVADDR)	; Start
+			LD		HL, (MVADDR+2)	; End
+			SBC		HL, DE			; Size
 			LD		B, H
 			LD		C, L
-			LD		A, (MVADDR+4)
-			LD		HL, (MVADDR)
-			LD		(HL), A
-			LD		DE, (MVADDR)
-			INC		DE
+			LD		A, (MVADDR+4)	; Fill value
+			LD		HL, (MVADDR)	; First source location
+			LD		(HL), A			; seed the fill block
+			LD		DE, (MVADDR)	; First dest. location
+			INC		DE				; 
 			LDIR
 			RET
+			
+F_ORDERR:
+			LD		A, E_PARAM
+			LD		(ERRFLAG), A
+			RET
+			
 
 ;***************************************************************************
 ; Next Page Memory Dump Command
@@ -253,3 +291,45 @@ PREVP_COMMAND:
 			LD		(DMPADDR), HL
 			JP		MDNXTPR
 
+;***************************************************************************
+; Upload Hex-Intel records
+; 
+;***************************************************************************
+
+; From: https://www.z80cpu.eu/mirrors/www.z80.info/zip/z80asm.zip
+INTLIN_CMD:	
+			CALL	GETHEXBYTE		;Get record length
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			LD		B, A			;Put in B
+			CALL	GETHEXBYTE		;Get record address hi byte
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			LD		H, A			;Put in H
+			CALL	GETHEXBYTE		;Get record address lo byte
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			LD		L, A			;Put in L
+			CALL	GETHEXBYTE		;Ignore record type
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			LD		(DMPADDR), HL
+
+INTLIN_LP:
+			CALL	GETHEXBYTE		;Get record data byte
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		NZ
+			LD		(HL), A			;Save byte to memory
+			INC		HL				;Next address
+			DJNZ	INTLIN_LP		;Decrement count and jump if not finished
+			JR		INTLIN_CMD		;Ignore checksum byte and [CR][LF]
+			
+			LD		HL, (DMPADDR)	;print the line starting address as response
+			CALL	PRINTHWORD		;
+			
+			RET

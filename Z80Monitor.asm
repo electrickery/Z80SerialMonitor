@@ -17,8 +17,11 @@ MPFMON:      EQU    0030h
 ASCDMPBUF:   EQU    1810h		;Buffer to construct ASCII part of memory dump
 ASCDMPEND:   EQU    1820h		;End of buffer, fill with EOS
 DMPADDR:     EQU    1821h		;Last dump address
-MVADDR:      EQU    1823h 		; 6 bytes: start-address, end-address, dest-address of fill-value
-
+MVADDR:      EQU    1823h 		; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
+ERRFLAG:     EQU    1829h		; Location to store 
+E_NONE:      EQU    00h
+E_NOHEX:     EQU    01h			; input char not 0-9, A-F
+E_PARAM:     EQU    02h			; inconsistent range; start > end
 
 EOS:         EQU    0FFh		;End of string
 
@@ -51,6 +54,7 @@ MAIN:
 			LD		(DMPADDR), A
 			LD		A, 0FFh				; FF00h and next should result in 0000h
 			LD		(DMPADDR+1), A
+			CALL	CLEAR_ERROR
 			CALL    MON_PROMPT_LOOP		;Monitor user prompt loop
 			HALT
 
@@ -80,7 +84,7 @@ MON_MSG:	DEFB	0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, '2015 MCook', EOS
 MONMSG2:	DEFB	0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, 09h, '2020 F.J.Kraan', 0Dh, 0Ah, EOS
 MON_VER:	DEFB	'ROM Monitor v0.2', 0Dh, 0AH, 0Dh, 0AH, EOS
 MON_HLP:	DEFB	09h,' Input ? for command list', 0Dh, 0AH, EOS
-MON_ERR:	DEFB	'Error in params', 0Dh, 0AH, EOS
+MON_ERR:	DEFB	0Dh, 0AH, 'Error in params: ', EOS
 
 PRINT_MON_HDR:
 			CALL	CLEAR_SCREEN		;Clear the terminal screen
@@ -114,7 +118,8 @@ MON_PRMPT_LOOP:
 ;MON_COMMAND
 ;Function: User input in accumulator to respond to 
 ;***************************************************************************
-MON_COMMAND:
+MON_COMMAND:	; Inserted ERROR_CHK for all commands requiring input
+			CALL	CLEAR_ERROR
 			CP		'?'					
 			CALL  	Z,HELP_COMMAND
 			CP		'D'
@@ -131,12 +136,26 @@ MON_COMMAND:
 			CALL	Z,NEXTP_COMMAND
 			CP		'-'
 			CALL	Z,PREVP_COMMAND
+			CP		':'
+			CALL	Z,INTLIN_CMD
+			CALL	ERROR_CHK
 			RET
 			
-ERROR:
+ERROR_CHK:
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			RET		Z
 			LD		HL, MON_ERR
 			CALL    PRINT_STRING
-			JP		MON_PRMPT_LOOP
+			LD		A, (ERRFLAG)
+			CALL	PRINTHBYTE
+			CALL	PRINT_NEW_LINE
+CLEAR_ERROR:
+			PUSH	AF
+			LD		A, E_NONE
+			LD		(ERRFLAG), A
+			POP		AF
+			RET
 			
 			INCLUDE	DARTDriver.asm
 			INCLUDE	MONCommands.asm
