@@ -22,6 +22,8 @@ ERRFLAG:     EQU    1829h		; Location to store
 MUTE:        EQU    182Ah		; 0 - print received chars, 1 - do not print received chars
 ULSIZE:      EQU    182Bh		; actual size of current/last hex-intel message
 IECHECKSUM:  EQU    182Ch
+IECKSMCLC:   EQU    182Dh
+IERECTYPE:   EQU    182Eh
 DEBUG:       EQU    182Fh
 UPLOADBUF:   EQU    1830h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
 ULBEND:      EQU    1850h

@@ -363,47 +363,40 @@ INTLIN_CMD:
 			LD		A, (ULSIZE)		; Check for maximum buffer size
 			CP		ULBUFSIZE
 			JP		NC, I_ERRBSZ
-;			LD		HL, (MVADDR)
-;			LD		C, A
-;			LD		B, 0
-;			ADD		HL, BC
-;			LD		(MVADDR+2), HL	; Copy value into end move address
 			; *** address MSB ***
 			CALL	GETHEXBYTE		;Get record address hi byte
-			LD		C, A
+			LD		(MVADDR+5), A			;Put in move dest MSB
 			LD		A, (ERRFLAG)
 			CP		E_NONE
 			JR		NZ, I_PASSERR
-			LD		A, C
-			LD		(MVADDR+5), A			;Put in move dest MSB
+			LD		A, (MVADDR+5)
 			; *** address LSB ***
 			CALL	GETHEXBYTE		;Get record address lo byte
-			LD		C, A
+			LD		(MVADDR+4), A			;Put in move dest LSB
 			LD		A, (ERRFLAG)
 			CP		E_NONE
 			JR		NZ, I_PASSERR
-			LD		A, C
-			LD		(MVADDR+4), A			;Put in move dest LSB
+			LD		A, (MVADDR+4)
 			; *** record type ***
 			CALL	GETHEXBYTE		; Check record type
-			LD		C, A
+			LD		(IERECTYPE), A
 			LD		A, (ERRFLAG)
 			CP		E_NONE
 			JR		NZ, I_PASSERR
-			LD		A, C
+			LD		A, (IERECTYPE)
 			CP		HI_DATA
-			JR		Z, I_ULPREP	; To data upload
+			JR		Z, I_ULPREP		; To data upload
 			CP		HI_END
 			JR		Z, I_HIEND		; Done with end record
 			
 			JR		I_ERRTYP
 I_ULPREP:
 			LD		A, (ULSIZE)
-			INC		A			; off-by-one because of decrement before test of DJNZ ?
+;			INC		A			; off-by-one because of decrement before test of DJNZ ?
 			LD		(DEBUG), A
 			LD		B, A
 			LD		HL, UPLOADBUF
-			DEC		HL
+
 INTLIN_LP:
 			LD		A, B
 			LD		(DEBUG), A
@@ -425,6 +418,9 @@ INTLIN_LP:
 			; *** close ***
 			LD		A, 00h
 			LD		(MUTE), A 		; allow echo
+			; *** checksum calculate ***
+			CALL	HICHECKSUM
+			
 			; *** print response ***
 			LD		HL, (MVADDR+4)	;print the line starting address as response
 			CALL	PRINTHWORD		;
@@ -459,4 +455,23 @@ I_HIEND:	LD		A, E_HIEND
 			LD		(ERRFLAG), A
 			LD		A, 00h
 			LD		(MUTE), A 		; allow echo
+			CALL	GETHEXBYTE		; wait for checksum
+			RET
+
+HICHECKSUM:
+			LD		A, 0FFh
+			LD		HL, (ULSIZE)		; rec size
+			SBC		A, (HL)
+			LD		B, A
+			LD		HL, (MVADDR+4)	; dest MSB
+			SBC		A, (HL)
+			LD		HL, (MVADDR+5)	; dest LSB
+			SBC		A, (HL)
+			;SBC		A, 0		; record type
+			LD		HL, UPLOADBUF
+I_CKSMLP:	
+			SBC 	A, (HL)
+			INC		HL
+			DJNZ	I_CKSMLP
+			LD		(IECKSMCLC), A
 			RET
