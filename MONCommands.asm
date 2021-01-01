@@ -368,26 +368,26 @@ INTLIN_CMD:
 			LD		(MVADDR+5), A			;Put in move dest MSB
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			JR		NZ, I_PASSERR
+			JP		NZ, I_PASSERR
 			LD		A, (MVADDR+5)
 			; *** address LSB ***
 			CALL	GETHEXBYTE		;Get record address lo byte
 			LD		(MVADDR+4), A			;Put in move dest LSB
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			JR		NZ, I_PASSERR
+			JP		NZ, I_PASSERR
 			LD		A, (MVADDR+4)
 			; *** record type ***
 			CALL	GETHEXBYTE		; Check record type
 			LD		(IERECTYPE), A
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			JR		NZ, I_PASSERR
+			JP		NZ, I_PASSERR
 			LD		A, (IERECTYPE)
 			CP		HI_DATA
-			JR		Z, I_ULPREP		; To data upload
+			JP		Z, I_ULPREP		; To data upload
 			CP		HI_END
-			JR		Z, I_HIEND		; Done with end record
+			JP		Z, I_HIEND		; Done with end record
 			
 			JR		I_ERRTYP
 I_ULPREP:
@@ -419,20 +419,29 @@ INTLIN_LP:
 			LD		A, 00h
 			LD		(MUTE), A 		; allow echo
 			; *** checksum calculate ***
-			CALL	HICHECKSUM
+			CALL	I_CHECKSUM
 			
+			LD		B, A			; compare calculated checksum
+			LD		A, (IECHECKSUM)	; with record value
+			CP		B
+			JR		NZ, I_ERRCHKSM
+
 			; *** print response ***
 			LD		HL, (MVADDR+4)	;print the line starting address as response
 			CALL	PRINTHWORD		;
 			CALL	PRINT_NEW_LINE
 			
+			LD		A, 01h
+			LD		(MUTE), A 		; disable echo
+			; Upload to destination
 			LD		HL, UPLOADBUF
 			LD		DE, (MVADDR+4)
 			LD		B, 0
 			LD		A, (ULSIZE)
 			LD		C, A
 			LDIR
-;			JP		INTLIN_CMD	; next record
+
+			JP		INTLIN_CMD	; next record
 I_PASSERR:
 I_NOERR:
 			LD		A, 00h
@@ -451,6 +460,13 @@ I_ERRTYP:	LD		A, E_HITYP
 			LD		(MUTE), A 		; allow echo
 			RET
 
+I_ERRCHKSM:
+			LD		A, E_HICKSM
+			LD		(ERRFLAG), A
+			LD		A, 00h
+			LD		(MUTE), A 		; allow echo
+			RET
+			;
 I_HIEND:	LD		A, E_HIEND
 			LD		(ERRFLAG), A
 			LD		A, 00h
@@ -458,20 +474,23 @@ I_HIEND:	LD		A, E_HIEND
 			CALL	GETHEXBYTE		; wait for checksum
 			RET
 
-HICHECKSUM:
-			LD		A, 0FFh
-			LD		HL, (ULSIZE)		; rec size
-			SBC		A, (HL)
+I_CHECKSUM:
+			LD		A, (ULSIZE)		; rec size
 			LD		B, A
-			LD		HL, (MVADDR+4)	; dest MSB
-			SBC		A, (HL)
-			LD		HL, (MVADDR+5)	; dest LSB
-			SBC		A, (HL)
-			;SBC		A, 0		; record type
+			INC		B				; compensate for decrement before compare?
+			LD		HL, MVADDR+5	; dest MSB
+			ADD		A, (HL)
+			LD		HL, MVADDR+4	; dest LSB
+			ADD		A, (HL)
+			;ADD		A, 0		; record type
 			LD		HL, UPLOADBUF
 I_CKSMLP:	
-			SBC 	A, (HL)
+			ADD 	A, (HL)
 			INC		HL
 			DJNZ	I_CKSMLP
+			LD		B, A
+			LD		A, 0FFh
+			SBC		A, B
+			INC		A
 			LD		(IECKSMCLC), A
 			RET

@@ -34,7 +34,8 @@ E_NOHEX:     EQU    01h			; input char not 0-9, A-F
 E_PARAM:     EQU    02h			; inconsistent range; start > end
 E_BUFSIZE:   EQU    03h			; size larger than buffer
 E_HITYP:     EQU    04h			; unsupported hex-intel record type
-E_HIEND:     EQU    05h			; hex-intel end record type found
+E_HICKSM:    EQU    05h			; hex-intel record checksum error
+E_HIEND:     EQU    06h			; hex-intel end record type found
 
 HI_DATA:     EQU    00h
 HI_END:      EQU    01h
