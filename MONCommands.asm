@@ -23,7 +23,7 @@ HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HELPMSG3: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HELPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HELPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
-HELPMSGf: DEFB ': - upload Hex-Intel record', 0Dh, 0Ah, EOS
+HELPMSGf: DEFB 'I - upload Hex-Intel record', 0Dh, 0Ah, EOS
 
 
 HELP_COMMAND:
@@ -74,9 +74,9 @@ MDCMD:
 			PUSH	HL					;Save HL that holds databyte location on stack
 			CALL    PRINT_NEW_LINE		;Print some messages
 			CALL    PRINT_NEW_LINE
-			LD 		HL,MDC_3	
+			LD 		HL, MDC_3	
 			CALL    PRINT_STRING
-;			CALL    PRINT_NEW_LINE
+
 			POP		HL					;Restore HL that holds databyte location on stack
 MDNXTPR:	LD		C,HEXLINES			;Register C holds counter of dump lines to print
 MDLINE:	
@@ -341,40 +341,122 @@ EDIT_LP:	LD		A, ':'
 ; 
 ;***************************************************************************
 
+UPLOAD_COMMAND:
+			LD		A, 01h
+			LD		(MUTE), A 		; suppress echo
+			CALL	GET_CHAR
+			CP		ESC
+			JP		Z, I_NOERR
+			CP		':'
+			JR		NZ, UPLOAD_COMMAND ; Loop here until a ':' or ESC is received
+
 ; From: https://www.z80cpu.eu/mirrors/www.z80.info/zip/z80asm.zip
 INTLIN_CMD:	
+			LD		HL, UPLOADBUF
+			LD		(MVADDR), HL
+			; *** record size ***
 			CALL	GETHEXBYTE		;Get record length
+			LD		(ULSIZE), A
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			RET		NZ
-			LD		B, A			;Put in B
+			JP		NZ, I_PASSERR
+			LD		A, (ULSIZE)		; Check for maximum buffer size
+			CP		ULBUFSIZE
+			JP		NC, I_ERRBSZ
+;			LD		HL, (MVADDR)
+;			LD		C, A
+;			LD		B, 0
+;			ADD		HL, BC
+;			LD		(MVADDR+2), HL	; Copy value into end move address
+			; *** address MSB ***
 			CALL	GETHEXBYTE		;Get record address hi byte
+			LD		C, A
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			RET		NZ
-			LD		H, A			;Put in H
+			JR		NZ, I_PASSERR
+			LD		A, C
+			LD		(MVADDR+5), A			;Put in move dest MSB
+			; *** address LSB ***
 			CALL	GETHEXBYTE		;Get record address lo byte
+			LD		C, A
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			RET		NZ
-			LD		L, A			;Put in L
-			CALL	GETHEXBYTE		;Ignore record type
+			JR		NZ, I_PASSERR
+			LD		A, C
+			LD		(MVADDR+4), A			;Put in move dest LSB
+			; *** record type ***
+			CALL	GETHEXBYTE		; Check record type
+			LD		C, A
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			RET		NZ
-			LD		(DMPADDR), HL
-
+			JR		NZ, I_PASSERR
+			LD		A, C
+			CP		HI_DATA
+			JR		Z, I_ULPREP	; To data upload
+			CP		HI_END
+			JR		Z, I_HIEND		; Done with end record
+			
+			JR		I_ERRTYP
+I_ULPREP:
+			LD		A, (ULSIZE)
+			INC		A			; off-by-one because of decrement before test of DJNZ ?
+			LD		(DEBUG), A
+			LD		B, A
+			LD		HL, UPLOADBUF
+			DEC		HL
 INTLIN_LP:
+			LD		A, B
+			LD		(DEBUG), A
+			; *** data bytes ***
 			CALL	GETHEXBYTE		;Get record data byte
+			LD		(HL), A			;Save byte to memory
 			LD		A, (ERRFLAG)
 			CP		E_NONE
-			RET		NZ
-			LD		(HL), A			;Save byte to memory
-			INC		HL				;Next address
+			JR		NZ, I_NOERR
+			INC		HL				;Next buffer address
+			LD		A, (DEBUG)
 			DJNZ	INTLIN_LP		;Decrement count and jump if not finished
-			JR		INTLIN_CMD		;Ignore checksum byte and [CR][LF]
-			
-			LD		HL, (DMPADDR)	;print the line starting address as response
+			; *** checksum byte ***
+			CALL	GETHEXBYTE
+			LD		(IECHECKSUM), A
+			LD		A, (ERRFLAG)
+			CP		E_NONE
+			JR		NZ, I_NOERR
+			; *** close ***
+			LD		A, 00h
+			LD		(MUTE), A 		; allow echo
+			; *** print response ***
+			LD		HL, (MVADDR+4)	;print the line starting address as response
 			CALL	PRINTHWORD		;
+			CALL	PRINT_NEW_LINE
 			
+			LD		HL, UPLOADBUF
+			LD		DE, (MVADDR+4)
+			LD		B, 0
+			LD		A, (ULSIZE)
+			LD		C, A
+			LDIR
+;			JP		INTLIN_CMD	; next record
+I_PASSERR:
+I_NOERR:
+			LD		A, 00h
+			LD		(MUTE), A 		; allow echo
+			RET
+
+I_ERRBSZ:	LD		A, E_BUFSIZE
+			LD		(ERRFLAG), A
+			LD		A, 00h
+			LD		(MUTE), A 		; allow echo
+			RET
+			
+I_ERRTYP:	LD		A, E_HITYP
+			LD		(ERRFLAG), A
+			LD		A, 00h
+			LD		(MUTE), A 		; allow echo
+			RET
+
+I_HIEND:	LD		A, E_HIEND
+			LD		(ERRFLAG), A
+			LD		A, 00h
+			LD		(MUTE), A 		; allow echo
 			RET

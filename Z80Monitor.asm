@@ -19,11 +19,26 @@ ASCDMPEND:   EQU    1820h		;End of buffer, fill with EOS
 DMPADDR:     EQU    1821h		;Last dump address
 MVADDR:      EQU    1823h 		; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
 ERRFLAG:     EQU    1829h		; Location to store 
+MUTE:        EQU    182Ah		; 0 - print received chars, 1 - do not print received chars
+ULSIZE:      EQU    182Bh		; actual size of current/last hex-intel message
+IECHECKSUM:  EQU    182Ch
+DEBUG:       EQU    182Fh
+UPLOADBUF:   EQU    1830h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
+ULBEND:      EQU    1850h
+ULBUFSIZE:   EQU    ULBEND-UPLOADBUF+1
+
 E_NONE:      EQU    00h
 E_NOHEX:     EQU    01h			; input char not 0-9, A-F
 E_PARAM:     EQU    02h			; inconsistent range; start > end
+E_BUFSIZE:   EQU    03h			; size larger than buffer
+E_HITYP:     EQU    04h			; unsupported hex-intel record type
+E_HIEND:     EQU    05h			; hex-intel end record type found
 
-EOS:         EQU    0FFh		;End of string
+HI_DATA:     EQU    00h
+HI_END:      EQU    01h
+
+ESC:         EQU    01Bh		; 
+EOS:         EQU    0FFh		; End of string
 
 ;			ORG 0000h
 
@@ -80,8 +95,8 @@ RESET_COMMAND:
 ;PRINT_MON_HDR
 ;Function: Print out program header info
 ;***************************************************************************
-MON_MSG:	DEFB	0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, '2015 MCook', EOS
-MONMSG2:	DEFB	0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, 09h, '2020 F.J.Kraan', 0Dh, 0Ah, EOS
+MON_MSG:	DEFB	0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
+MONMSG2:	DEFB	0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2020 F.J.Kraan', 0Dh, 0Ah, EOS
 MON_VER:	DEFB	'ROM Monitor v0.2', 0Dh, 0AH, 0Dh, 0AH, EOS
 MON_HLP:	DEFB	09h,' Input ? for command list', 0Dh, 0AH, EOS
 MON_ERR:	DEFB	0Dh, 0AH, 'Error in params: ', EOS
@@ -105,6 +120,8 @@ PRINT_MON_HDR:
 MON_PROMPT: DEFB '>',EOS
 
 MON_PRMPT_LOOP:
+			LD		A, 00h
+			LD		(MUTE), A			; Enables echo of received chars
 			LD 		HL,MON_PROMPT		;Print monitor prompt
 			CALL    PRINT_STRING		
 			CALL	GET_CHAR			;Get a character from user into Acc
@@ -138,8 +155,8 @@ MON_COMMAND:	; Inserted ERROR_CHK for all commands requiring input
 			CALL	Z,PREVP_COMMAND
 			CP		'E'
 			CALL	Z,EDIT_COMMAND
-			CP		':'
-			CALL	Z,INTLIN_CMD
+			CP		'I'
+			CALL	Z,UPLOAD_COMMAND
 			CALL	ERROR_CHK
 			RET
 			

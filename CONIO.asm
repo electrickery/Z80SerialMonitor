@@ -32,6 +32,19 @@ PRINT_CHAR:
 			CALL	UART_TX				;Echo character to terminal
 			RET			
 			
+; Optional print char
+OPRINTCHAR:
+			LD		C, A
+			LD		A, (MUTE)
+			CP		01H		; compare with 1=true
+			JR		Z, PRTSKIP
+			LD		A, C
+			CALL	PRINT_CHAR
+
+PRTSKIP:	
+			LD		A, C
+			RET
+
 ;***************************************************************************
 ;TO_UPPER
 ;Function: Convert character in Accumulator to upper case 
@@ -105,11 +118,12 @@ GETHEXNIB:
 			CALL	GET_CHAR
             CALL    CHAR_ISHEX      	; Is it a hex digit?
             JP      NC,NONHEXNIB 	 	; Yes - Continue / No - Exit
-			CALL    PRINT_CHAR
+			CALL    OPRINTCHAR
+
 			CP      '9' + 1         	; Is it a digit less or equal '9' + 1?
-            JP      C,GHN1 				; Yes - Jump / No - Continue
+            JP      C,IS_NUM 			; Yes - Jump / No - Continue
             SUB     07h             	; Adjust for A-F digits
-GHN1:                
+IS_NUM:                
 			SUB     '0'             	; Subtract to get nib between 0->15
             AND     0Fh             	; Only return lower 4 bits
             RET
@@ -121,9 +135,11 @@ NONHEXNIB:								; Allow exit on wrong char
 ;***************************************************************************
 ;GET_HEX_BTYE
 ;Function: Gets HEX byte into A
+;Uses: AF, D
 ;***************************************************************************
 GETHEXBYTE:
             CALL    GETHEXNIB			; Get high nibble
+            PUSH	DE
 			PUSH	AF
 			LD		A, (ERRFLAG)
 			CP		E_NONE
@@ -133,22 +149,25 @@ GETHEXBYTE:
             RLC     A
             RLC     A
             RLC     A
-            LD      B,A					; Save upper four bits
+            LD      D,A					; Save upper four bits
             CALL    GETHEXNIB			; Get lower nibble
 			PUSH	AF
 			LD		A, (ERRFLAG)
 			CP		E_NONE
 			JR		NZ, GHB_ERR  
 			POP		AF          
-            OR      B					; Combine both nibbles
+            OR      D					; Combine both nibbles
+            POP		DE
             RET
 GHB_ERR:
 			POP		AF
+			POP		DE
 			RET
 
 ;***************************************************************************
 ;GET_HEX_WORD
 ;Function: Gets two HEX bytes into HL
+;Uses: AF
 ;***************************************************************************
 GETHEXWORD:
             CALL    GETHEXBYTE		;Get high byte
@@ -192,16 +211,16 @@ PHN1:
 ;***************************************************************************		
 PRINTHBYTE:
 			PUSH	AF					;Save registers
-            PUSH    BC
-            LD		B,A					;Save for low nibble
+			PUSH	DE
+            LD		D,A					;Save for low nibble
             RRCA						;Rotate high nibble into low nibble
 			RRCA
 			RRCA
 			RRCA
             CALL    PRINTHNIB		;Print high nibble
-            LD		A,B					;Restore for low nibble
+            LD		A,D					;Restore for low nibble
             CALL    PRINTHNIB		;Print low nibble
-            POP     BC					;Restore registers
+            POP		DE
             POP		AF
 			RET
 			
@@ -210,12 +229,12 @@ PRINTHBYTE:
 ;Function: Prints the four hex digits of a word to the serial line from HL
 ;***************************************************************************
 PRINTHWORD:     
-			PUSH 	HL
+;			PUSH 	HL
             PUSH	AF
             LD		A,H
 			CALL	PRINTHBYTE		;Print high byte
             LD		A,L
             CALL    PRINTHBYTE		;Print low byte
             POP		AF
-			POP		HL
+;			POP		HL
             RET			
