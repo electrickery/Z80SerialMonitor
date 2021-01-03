@@ -4,7 +4,7 @@
 ;  ASSEMBLER:		original: TASM 3.2 , converted to z80pack/z80asm
 ;  LICENCE:			The MIT Licence
 ;  AUTHOR :			MCook
-;  CREATE DATE :	06 May 15
+;  CREATE DATE :	06 May 15 / 2021-01-01
 ;***************************************************************************
 
 HEXLINES:	EQU	17 ; FIXIT: There is a off-by-one-here
@@ -16,7 +16,7 @@ HEXLINES:	EQU	17 ; FIXIT: There is a off-by-one-here
 HELPMSG1: DEFB 'ZMC80 Monitor Command List', 0Dh, 0Ah, EOS
 HELPMSG2: DEFB '? - view command list', 0Dh, 0Ah, EOS
 HELPMSG4: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
-HELPMSG5: DEFB 'D - print $FF bytes from specified location', 0Dh, 0Ah, EOS
+HELPMSG5: DEFB 'D - print 100h bytes from specified location', 0Dh, 0Ah, EOS
 HELPMSGa: DEFB 'E - edit bytes in memory', 0Dh, 0Ah, EOS
 HELPMSG7: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
 HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
