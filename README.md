@@ -29,7 +29,7 @@ native Z80-CTC as baudrate clock source.
 ![Modification of the MPF-1(B)](./MPF-Z80DART.pdf)
 
 More information on the hardware modification can be found at 
-http://electrickery.connected.by.freedominter.net/comp/mpf1/modifications.html#dart.
+http://electrickery.nl/comp/mpf1/modifications.html#dart.
 
 ## Porting of a monitor
 
