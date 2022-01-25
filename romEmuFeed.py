@@ -5,8 +5,8 @@ import sys
 import serial
 import time
 
-ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)  # open serial port
-LF = "\n"
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=2)  # open serial port
+LF = "\r\n"
 hexOffsetStr = ""
 sendDelay = 0.05
 time.sleep(sendDelay)
@@ -21,10 +21,13 @@ file = open(hexFile, 'r')
 lines = file.readlines()
 file.close()
 
+print(ser.readline().strip())
+time.sleep(sendDelay)
+
 if hexOffsetStr:
     ser.write(str.encode(hexOffsetStr + LF))
-    time.sleep(sendDelay)
     print(ser.readline().strip())
+    time.sleep(sendDelay)
 
 for line in lines:
     lineStrip = line.strip()
@@ -33,3 +36,4 @@ for line in lines:
         ser.write(str.encode(lineStrip + LF))
         time.sleep(sendDelay)
         print(ser.readline().strip())
+        time.sleep(sendDelay)
