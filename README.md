@@ -67,14 +67,6 @@ Usage:
 The second argument of the script compensates for the target address in the hex intel file with respect to 
 the address in the RAM. 
 
-## Native hex-intel upload code 
-
-Writing the other extensions were relative simple and straightforward, but the upload facility with the multiple
-interactions with the serial interface were more challenging. The current version processes the short manual 
-inserted test record without problem. More testing is needed.
-
-The license is MIT, as the existing monitor code uses this.
-
 ## Some screenshots
 
 Startup banner and help:
@@ -87,4 +79,4 @@ Changes made to the dump command:
 
 A planned change is to add a download of hex-intel via the monitor too, making a comparison on the host possible.
 
-fjkraan@electrickery.nl, 20210102
+fjkraan@electrickery.nl, 20220125
