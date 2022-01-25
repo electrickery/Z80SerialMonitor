@@ -7,42 +7,107 @@
 ;  CREATE DATE :	05 May 15 / 2021-01-01
 ;***************************************************************************
 
-ROM_BOTTOM:  EQU    0000h		;Bottom address of ROM
-ROM_TOP:     EQU    07FFh		;Top address of ROM
+ROM_BOTTOM:  EQU    02000h		;Bottom address of ROM
+ROM_TOP:     EQU    ROM_BOTTOM + 00FFFh		;Top address of ROM
 
-RAM_BOTTOM:  EQU    1800h		;Bottom address of RAM
-RAM_TOP:     EQU    19FFh		;Top address of RAM	
+RAM_BOTTOM:  EQU    01800h		;Bottom address of RAM
+RAM_TOP:     EQU    RAM_BOTTOM + 0FFh		;Top address of RAM	
 
-MPFMON:      EQU    0030h
-ASCDMPBUF:   EQU    1810h		;Buffer to construct ASCII part of memory dump
-ASCDMPEND:   EQU    1820h		;End of buffer, fill with EOS
-DMPADDR:     EQU    1821h		;Last dump address
-MVADDR:      EQU    1823h 		; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
-ERRFLAG:     EQU    1829h		; Location to store 
-MUTE:        EQU    182Ah		; 0 - print received chars, 1 - do not print received chars
-ULSIZE:      EQU    182Bh		; actual size of current/last hex-intel message
-IECHECKSUM:  EQU    182Ch
-IECKSMCLC:   EQU    182Dh
-IERECTYPE:   EQU    182Eh
-DEBUG:       EQU    182Fh
-UPLOADBUF:   EQU    1830h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
-ULBEND:      EQU    1850h
-ULBUFSIZE:   EQU    ULBEND-UPLOADBUF+1
+UART_BASE:  EQU     060h
 
-E_NONE:      EQU    00h
-E_NOHEX:     EQU    01h			; input char not 0-9, A-F
-E_PARAM:     EQU    02h			; inconsistent range; start > end
-E_BUFSIZE:   EQU    03h			; size larger than buffer
-E_HITYP:     EQU    04h			; unsupported hex-intel record type
-E_HICKSM:    EQU    05h			; hex-intel record checksum error
-E_HIEND:     EQU    06h			; hex-intel end record type found
+MPFMON:     EQU    0030h
+ASCDMPBUF:  EQU    RAM_BOTTOM + 0h	    	;Buffer to construct ASCII part of memory dump
+ASCDMPEND:  EQU    RAM_BOTTOM + 10h		;End of buffer, fill with EOS
+DMPADDR:    EQU    RAM_BOTTOM + 11h		;Last dump address
+MVADDR:     EQU    RAM_BOTTOM + 12h 		; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
+ERRFLAG:    EQU    RAM_BOTTOM + 18h		; Location to store 
+MUTE:       EQU    RAM_BOTTOM + 19h		; 0 - print received chars, 1 - do not print received chars
+ULSIZE:     EQU    RAM_BOTTOM + 1Ah		; actual size of current/last hex-intel message
+IECHECKSUM: EQU    RAM_BOTTOM + 1Bh        ; hex-intel record checksum
+IECKSMCLC:  EQU    RAM_BOTTOM + 1Ch        ; hex-intel record
+IERECTYPE:  EQU    RAM_BOTTOM + 1Dh        ; hex-intel record type
+DEBUG:      EQU    RAM_BOTTOM + 1Eh
+UPLOADBUF:  EQU    RAM_BOTTOM + 20h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
+ULBEND:     EQU    RAM_BOTTOM + 40h
+ULBUFSIZE:  EQU    ULBEND-UPLOADBUF+1
 
-HI_DATA:     EQU    00h
-HI_END:      EQU    01h
+; Error codes intel Hex record
+E_NONE:     EQU    00h
+E_NOHEX:    EQU    01h			; input char not 0-9, A-F
+E_PARAM:    EQU    02h			; inconsistent range; start > end
+E_BUFSIZE:  EQU    03h			; size larger than buffer
+E_HITYP:    EQU    04h			; unsupported hex-intel record type
+E_HICKSM:   EQU    05h			; hex-intel record checksum error
+E_HIEND:    EQU    06h			; hex-intel end record type found
 
-ESC:         EQU    01Bh		; 
-EOS:         EQU    0FFh		; End of string
+HI_DATA:    EQU    00h
+HI_END:     EQU    01h
 
+ESC:        EQU    01Bh		; 
+EOS:        EQU    0FFh		; End of string
+
+; Elaborate logic/arithmetic to calculate ROM & UART base address digits
+            IFEQ (ROM_BOTTOM & 0C000h), 0C000h
+ROMB1:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
+            ELSE
+            IFEQ (ROM_BOTTOM & 0A000h), 0A000h
+ROMB1:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
+            ELSE
+ROMB1:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '0'
+            ENDIF
+            ENDIF
+             
+            IFEQ (ROM_BOTTOM & 0C00h), 0C00h
+ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '7'
+            ELSE
+            IFEQ (ROM_BOTTOM & 0A00h), 0A00h
+ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '7'
+            ELSE
+ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '0'
+            ENDIF
+            ENDIF
+
+            IFEQ (ROM_BOTTOM & 0C0h), 0C0h
+ROMB3:      EQU    (ROM_BOTTOM & 000F0h) / 10h   + '7'
+            ELSE
+            IFEQ (ROM_BOTTOM & 0A0h), 0A0h
+ROMB3:      EQU    (ROM_BOTTOM & 000F0h) / 10h   + '7'
+            ELSE
+ROMB3:      EQU    (ROM_BOTTOM & 000F0h) / 10h   + '0'
+            ENDIF
+            ENDIF
+             
+            IFEQ (ROM_BOTTOM & 0Ch), 0Ch
+ROMB4:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
+            ELSE
+            IFEQ (ROM_BOTTOM & 0Ah), 0Ah
+ROMB4:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
+            ELSE
+ROMB4:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '0'
+            ENDIF
+            ENDIF
+
+            IFEQ (UART_BASE & 0C0h), 0C0h
+UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '7'
+            ELSE
+            IFEQ (UART_BASE & 0A0h), 0A0h
+UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '7'
+            ELSE
+UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '0'
+            ENDIF
+            ENDIF
+             
+            IFEQ (UART_BASE & 0Ch), 0Ch
+UART2:      EQU    (UART_BASE & 00Fh) / 10h   + '7'
+            ELSE
+            IFEQ (UART_BASE & 0Ah), 0Ah
+UART2:      EQU    (UART_BASE & 00Fh) / 10h   + '7'
+            ELSE
+UART2:      EQU    (UART_BASE & 00Fh) / 10h   + '0'
+            ENDIF
+            ENDIF
+
+; Only for stand-alone usage
 ;			ORG 0000h
 
 START:
@@ -59,7 +124,7 @@ START:
 ;NMI_CATCH:
 ;			JP		NMI_CATCH			;INF loop to catch interrupts (not enabled)
 ;			
-			ORG 2000h
+			ORG ROM_BOTTOM
 ;***************************************************************************
 ;MAIN
 ;Function: Entrance to user program
@@ -98,89 +163,91 @@ RESET_COMMAND:
 ;PRINT_MON_HDR
 ;Function: Print out program header info
 ;***************************************************************************
-MON_MSG:	DEFB	0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
-MONMSG2:	DEFB	0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2020 F.J.Kraan', 0Dh, 0Ah, EOS
-MON_VER:	DEFB	'ROM Monitor v0.2', 0Dh, 0AH, 0Dh, 0AH, EOS
-MON_HLP:	DEFB	09h,' Input ? for command list', 0Dh, 0AH, EOS
-MON_ERR:	DEFB	0Dh, 0AH, 'Error in params: ', EOS
+MNMSG1:    DEFB    0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
+MNMSG2:    DEFB    0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2022 F.J.Kraan', 0Dh, 0Ah, EOS
+MNMSG3:    DEFB    'Monitor v0.3, ROM: ', ROMB1, ROMB2, ROMB3, ROMB4, 'h DART: ', UART1, UART2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
+MONHLP:     DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
+MONERR:     DEFB    0Dh, 0AH, 'Error in params: ', EOS
 
 PRINT_MON_HDR:
-			CALL	CLEAR_SCREEN		;Clear the terminal screen
-			LD 		HL,MON_MSG			;Print some messages
-			CALL    PRINT_STRING	
-			LD 		HL,MONMSG2			;Print some extra message
-			CALL    PRINT_STRING	
-			LD 		HL,MON_VER
-			CALL    PRINT_STRING
-			LD 		HL,MON_HLP
-			CALL    PRINT_STRING
-			RET
-			
+        CALL    CLEAR_SCREEN        ;Clear the terminal screen
+        LD      HL, MNMSG1          ;Print some messages
+        CALL    PRINT_STRING
+        LD      HL, MNMSG2          ;Print some extra message
+        CALL    PRINT_STRING
+        LD      HL, MNMSG3
+        CALL    PRINT_STRING
+        LD      HL, MONHLP
+        CALL    PRINT_STRING
+        RET
+
 ;***************************************************************************
 ;MON_PROMPT
 ;Function: Prompt user for input
 ;***************************************************************************			
-MON_PROMPT: DEFB '>',EOS
+MON_PROMPT: DEFB '>', EOS
 
 MON_PRMPT_LOOP:
-			LD		A, 00h
-			LD		(MUTE), A			; Enables echo of received chars
-			LD 		HL,MON_PROMPT		;Print monitor prompt
-			CALL    PRINT_STRING		
-			CALL	GET_CHAR			;Get a character from user into Acc
-			CALL 	PRINT_CHAR
-			CALL    PRINT_NEW_LINE		;Print a new line
-			CALL	MON_COMMAND			;Respond to user input
-			CALL 	PRINT_NEW_LINE		;Print a new line	
-			JP		MON_PRMPT_LOOP
+        LD      A, 00h
+        LD      (MUTE), A			; Enables echo of received chars
+        LD      HL,MON_PROMPT		;Print monitor prompt
+        CALL    PRINT_STRING		
+        CALL    GET_CHAR			;Get a character from user into Acc
+        CALL    PRINT_CHAR
+        CALL    PRINT_NEW_LINE		;Print a new line
+        CALL    MON_COMMAND			;Respond to user input
+        CALL    PRINT_NEW_LINE		;Print a new line	
+        JR      MON_PRMPT_LOOP
 
 ;***************************************************************************
 ;MON_COMMAND
 ;Function: User input in accumulator to respond to 
 ;***************************************************************************
-MON_COMMAND:	; Inserted ERROR_CHK for all commands requiring input
-			CALL	CLEAR_ERROR
-			CP		'?'					
-			CALL  	Z,HELP_COMMAND
-			CP		'D'
-			CALL  	Z,MDCMD
-			CP		'C'
-			CALL  	Z,CLEAR_SCREEN
-			CP		'R'
-			CALL	Z,RESET_COMMAND
-			CP		'M'
-			CALL	Z,MOVE_COMMAND
-			CP		'F'
-			CALL	Z,FILL_COMMAND
-			CP		'+'
-			CALL	Z,NEXTP_COMMAND
-			CP		'-'
-			CALL	Z,PREVP_COMMAND
-			CP		'E'
-			CALL	Z,EDIT_COMMAND
-			CP		'I'
-			CALL	Z,UPLOAD_COMMAND
-			CALL	ERROR_CHK
-			RET
-			
-ERROR_CHK:
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		Z
-			LD		HL, MON_ERR
-			CALL    PRINT_STRING
-			LD		A, (ERRFLAG)
-			CALL	PRINTHBYTE
-			CALL	PRINT_NEW_LINE
-CLEAR_ERROR:
-			PUSH	AF
-			LD		A, E_NONE
-			LD		(ERRFLAG), A
-			POP		AF
-			RET
-			
-			INCLUDE	DARTDriver.asm
-			INCLUDE	MONCommands.asm
-			INCLUDE	CONIO.asm
+MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
+        CALL    CLEAR_ERROR
+        CP      '?'
+        CALL    Z,HELP_COMMAND
+        CP      'D'
+        CALL    Z,MDCMD
+        CP      'C'
+        CALL    Z,CLEAR_SCREEN
+        CP      'P'
+        CALL    Z,PSCOMMAND
+        CP      'R'
+        CALL    Z,RESET_COMMAND
+        CP      'M'
+        CALL    Z,MOVE_COMMAND
+        CP      'F'
+        CALL    Z,FILL_COMMAND
+        CP      'G'
+        CALL    Z,GO_COMMAND
+        CP      '+'
+        CALL    Z,NEXTP_COMMAND
+        CP      '-'
+        CALL    Z,PREVP_COMMAND
+        CP      'E'
+        CALL    Z,EDIT_COMMAND
+        CALL    ERROR_CHK
+        RET
 
-			END
+ERROR_CHK:
+        LD      A, (ERRFLAG)
+        CP      E_NONE
+        RET     Z
+        LD      HL, MONERR
+        CALL    PRINT_STRING
+        LD      A, (ERRFLAG)
+        CALL    PRINTHBYTE
+        CALL    PRINT_NEW_LINE
+CLEAR_ERROR:
+        PUSH    AF
+        LD      A, E_NONE
+        LD      (ERRFLAG), A
+        POP     AF
+        RET
+        
+        INCLUDE	DARTDriver.asm
+        INCLUDE	MONCommands.asm
+        INCLUDE	CONIO.asm
+
+        END

@@ -13,44 +13,47 @@ HEXLINES:	EQU	17 ; FIXIT: There is a off-by-one-here
 ;HELP_COMMAND
 ;Function: Print help dialogue box
 ;***************************************************************************
-HELPMSG1: DEFB 'ZMC80 Monitor Command List', 0Dh, 0Ah, EOS
-HELPMSG2: DEFB '? - view command list', 0Dh, 0Ah, EOS
-HELPMSG4: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
-HELPMSG5: DEFB 'D - print 100h bytes from specified location', 0Dh, 0Ah, EOS
-HELPMSGa: DEFB 'E - edit bytes in memory', 0Dh, 0Ah, EOS
-HELPMSG7: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
-HELPMSG6: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
-HELPMSG3: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
-HELPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
-HELPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
-HELPMSGf: DEFB 'I - upload Hex-Intel record', 0Dh, 0Ah, EOS
+HLPMSG1: DEFB 'ZMC80 Monitor Command List', 0Dh, 0Ah, EOS
+HLPMSG2: DEFB '? - view command list', 0Dh, 0Ah, EOS
+HLPMSGc: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
+HLPMSGd: DEFB 'D - print 100h bytes from specified location', 0Dh, 0Ah, EOS
+HLPMSGe: DEFB 'E - edit bytes in memory', 0Dh, 0Ah, EOS
+HLPMSGf: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
+HLPMSGg: DEFB 'G - jump to memory value', 0Dh, 0Ah, EOS
+HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
+HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
+HLPMSGr: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
+HLPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
+HLPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
 
 
 HELP_COMMAND:
-			LD 		HL,HELPMSG1		;Print some messages
-			CALL    PRINT_STRING		
-			LD 		HL,HELPMSG2		
-			CALL    PRINT_STRING			
-			LD 		HL,HELPMSG4		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSG5		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSGa		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSG7		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSG6		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSG3		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSG8		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSG9		
-			CALL    PRINT_STRING
-			LD 		HL,HELPMSGf		
-			CALL    PRINT_STRING
-			LD		A, EOS				;Load $FF into Acc so MON_COMMAND finishes
-			RET
+        LD      HL, HLPMSG1     ;Print some messages
+        CALL    PRINT_STRING
+        LD      HL, HLPMSG2
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGc
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGd
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGe
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGf
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGg
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGm
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGp
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGr
+        CALL    PRINT_STRING
+        LD      HL, HLPMSG8
+        CALL    PRINT_STRING
+        LD      HL, HLPMSG9
+        CALL    PRINT_STRING
+        LD      A, EOS          ;Load $FF into Acc so MON_COMMAND finishes
+        RET
 
 ;***************************************************************************
 ;MEMORY_DUMP_COMMAND
@@ -128,79 +131,79 @@ MVC_E:	DEFB	'End Location: ', EOS
 MVC_D:	DEFB	'Destination Location: ', EOS
 
 MOVE_COMMAND:
-			LD		HL, MVC_1	; Print some messages
-			CALL	PRINT_STRING
-			
-			LD		HL, MVC_S
-			CALL	PRINT_STRING
-			CALL	GETHEXWORD
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
-			LD		(MVADDR), HL
-			CALL	PRINT_NEW_LINE
-			
-			LD		HL, MVC_E
-			CALL	PRINT_STRING
-			CALL	GETHEXWORD
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
-			LD		(MVADDR+2), HL
-			CALL	PRINT_NEW_LINE
-			
-			LD		HL, MVC_D
-			CALL	PRINT_STRING
-			CALL	GETHEXWORD
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
-			LD		(MVADDR+4), HL
-			CALL	PRINT_NEW_LINE
-			
+        LD		HL, MVC_1	; Print some messages
+        CALL	PRINT_STRING
+        
+        LD		HL, MVC_S
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        LD		(MVADDR), HL
+        CALL	PRINT_NEW_LINE
+        
+        LD		HL, MVC_E
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        LD		(MVADDR+2), HL
+        CALL	PRINT_NEW_LINE
+        
+        LD		HL, MVC_D
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        LD		(MVADDR+4), HL
+        CALL	PRINT_NEW_LINE
+        
 ;***************************************************************************
 ; Adapted copy from MPF-1(B) Monitor
 ;***************************************************************************
-			ld		hl, MVADDR
-			call	GETP	; Fix BC contents from address, to size
-			jp		c, MERR
-			ld		de, (MVADDR+4)
-			sbc		hl, de
-			jr		nc, MVUP
-MVDN:		ex		de, hl
-			add		hl, bc
-			dec		hl
-			ex		de, hl
-			ld		hl, (MVADDR+2)
-			lddr
-			inc		de
-			RET
+        ld		hl, MVADDR
+        call	GETP	; Fix BC contents from address, to size
+        jp		c, MERR
+        ld		de, (MVADDR+4)
+        sbc		hl, de
+        jr		nc, MVUP
+MVDN:	ex		de, hl
+        add		hl, bc
+        dec		hl
+        ex		de, hl
+        ld		hl, (MVADDR+2)
+        lddr
+        inc		de
+        RET
 MVUP:
-			add		hl,de
-			ldir
-			dec		de
-			RET;
+        add		hl,de
+        ldir
+        dec		de
+        RET;
 MERR:
-			LD		A, E_PARAM
-			LD		(ERRFLAG), A
-			RET;
+        LD		A, E_PARAM
+        LD		(ERRFLAG), A
+        RET;
 
 GETP:
-			ld		e, (hl) ; MVADDR
-			inc		hl
-			ld		d, (hl) ; MVADDR+1
-			inc		hl
-			ld		c, (hl) ; MVADDR+2
-			inc		hl
-			ld		h, (hl) ; MVADDR+3
-			ld		l, c
-			or		a
-			sbc		hl, de
-			ld		c, l
-			ld		b, h
-			inc		bc
-			ex		de, hl
-			ret	
+        ld		e, (hl) ; MVADDR
+        inc		hl
+        ld		d, (hl) ; MVADDR+1
+        inc		hl
+        ld		c, (hl) ; MVADDR+2
+        inc		hl
+        ld		h, (hl) ; MVADDR+3
+        ld		l, c
+        or		a
+        sbc		hl, de
+        ld		c, l
+        ld		b, h
+        inc		bc
+        ex		de, hl
+        ret	
 ;***************************************************************************
 ; End copy from MPF-1(B) Monitor
 ;***************************************************************************
@@ -214,59 +217,59 @@ MFC_1:	DEFB	'Fill Memory Command', 0Dh, 0Ah, EOS
 MFC_D:	DEFB	'Data value (one byte): ', EOS
 
 FILL_COMMAND:
-			LD		HL, MFC_1	; Print some messages
-			CALL	PRINT_STRING
-			
-			LD		HL, MVC_S	; Start msg.
-			CALL	PRINT_STRING
-			CALL	GETHEXWORD
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
-			LD		(MVADDR), HL	; Start val.
-			CALL	PRINT_NEW_LINE
-			
-			LD		HL, MVC_E	; End msg.
-			CALL	PRINT_STRING
-			CALL	GETHEXWORD
-			LD		(MVADDR+2), HL	; End val.
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
-			
-			LD		DE, (MVADDR)	; Start
-			SBC		HL, DE		; Make sure end is past start...
-			JR		C, F_ORDERR
-			LD		HL, (MVADDR+2)
-			CALL	PRINT_NEW_LINE
-			
-			LD		HL, MFC_D
-			CALL	PRINT_STRING
-			CALL	GETHEXBYTE
-			LD		(MVADDR+4), A
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
-			CALL	PRINT_NEW_LINE
+        LD		HL, MFC_1	; Print some messages
+        CALL	PRINT_STRING
+        
+        LD		HL, MVC_S	; Start msg.
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        LD		(MVADDR), HL	; Start val.
+        CALL	PRINT_NEW_LINE
+        
+        LD		HL, MVC_E	; End msg.
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		(MVADDR+2), HL	; End val.
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        
+        LD		DE, (MVADDR)	; Start
+        SBC		HL, DE		; Make sure end is past start...
+        JR		C, F_ORDERR
+        LD		HL, (MVADDR+2)
+        CALL	PRINT_NEW_LINE
+        
+        LD		HL, MFC_D
+        CALL	PRINT_STRING
+        CALL	GETHEXBYTE
+        LD		(MVADDR+4), A
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        CALL	PRINT_NEW_LINE
 
-			LD		DE, (MVADDR)	; Start
-			LD		HL, (MVADDR+2)	; End
-			SBC		HL, DE			; Size
-			LD		B, H
-			LD		C, L
-			LD		A, (MVADDR+4)	; Fill value
-			LD		HL, (MVADDR)	; First source location
-			LD		(HL), A			; seed the fill block
-			LD		DE, (MVADDR)	; First dest. location
-			INC		DE				; 
-			LDIR
-			RET
-			
+        LD		DE, (MVADDR)	; Start
+        LD		HL, (MVADDR+2)	; End
+        SBC		HL, DE			; Size
+        LD		B, H
+        LD		C, L
+        LD		A, (MVADDR+4)	; Fill value
+        LD		HL, (MVADDR)	; First source location
+        LD		(HL), A			; seed the fill block
+        LD		DE, (MVADDR)	; First dest. location
+        INC		DE				; 
+        LDIR
+        RET
+        
 F_ORDERR:
-			LD		A, E_PARAM
-			LD		(ERRFLAG), A
-			RET
-			
+        LD		A, E_PARAM
+        LD		(ERRFLAG), A
+        RET
+        
 
 ;***************************************************************************
 ; Next Page Memory Dump Command
@@ -274,12 +277,12 @@ F_ORDERR:
 ;***************************************************************************
 
 NEXTP_COMMAND:
-			LD 		HL,MDC_3	
-			CALL    PRINT_STRING
-			LD		HL, (DMPADDR)
-			INC		H
-			LD		(DMPADDR), HL
-			JP		MDNXTPR
+        LD 		HL,MDC_3	
+        CALL    PRINT_STRING
+        LD		HL, (DMPADDR)
+        INC		H
+        LD		(DMPADDR), HL
+        JP		MDNXTPR
 
 ;***************************************************************************
 ; Previous Page Memory Dump Command
@@ -287,12 +290,12 @@ NEXTP_COMMAND:
 ;***************************************************************************
 
 PREVP_COMMAND:
-			LD 		HL,MDC_3	
-			CALL    PRINT_STRING
-			LD		HL, (DMPADDR)
-			DEC		H
-			LD		(DMPADDR), HL
-			JP		MDNXTPR
+        LD 		HL,MDC_3	
+        CALL    PRINT_STRING
+        LD		HL, (DMPADDR)
+        DEC		H
+        LD		(DMPADDR), HL
+        JP		MDNXTPR
 
 ;***************************************************************************
 ; Edit Memory Command
@@ -300,197 +303,111 @@ PREVP_COMMAND:
 ;***************************************************************************
 
 EDIT_COMMAND:
-			LD 		HL, MVC_S	; Start msg.
-			CALL    PRINT_STRING
-			
-			CALL	GETHEXWORD	; Get first address
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
-			
-EDIT_LP:	LD		A, ':'
-			CALL	PRINT_CHAR
-			LD		A, ' '
-			CALL	PRINT_CHAR
-			
-			LD		A, (HL)		; Print original value
-			CALL	PRINTHBYTE
-			
-			LD		A, '>'
-			CALL	PRINT_CHAR
-			LD		A, ' '
-			CALL	PRINT_CHAR
-			
-			CALL	GETHEXBYTE
-			LD		(MVADDR+4), A
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			RET		NZ
+        LD 		HL, MVC_S	; Start msg.
+        CALL    PRINT_STRING
+        
+        CALL	GETHEXWORD	; Get first address
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        
+EDIT_LP:
+        LD		A, ':'
+        CALL	PRINT_CHAR
+        LD		A, ' '
+        CALL	PRINT_CHAR
+        
+        LD		A, (HL)		; Print original value
+        CALL	PRINTHBYTE
+        
+        LD		A, '>'
+        CALL	PRINT_CHAR
+        LD		A, ' '
+        CALL	PRINT_CHAR
+        
+        CALL	GETHEXBYTE
+        LD		(MVADDR+4), A
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
 
-			LD		A, (MVADDR+4)
-			LD		(HL), A		; Write new value
-			
-			CALL	PRINT_NEW_LINE
-			INC		HL
-			CALL	PRINTHWORD
-			JR		EDIT_LP		; Only way out is type a non-hex char...
+        LD		A, (MVADDR+4)
+        LD		(HL), A		; Write new value
+        
+        CALL	PRINT_NEW_LINE
+        INC		HL
+        CALL	PRINTHWORD
+        JR		EDIT_LP		; Only way out is type a non-hex char...
+
 
 
 ;***************************************************************************
-; Upload Hex-Intel records
-; 
+;PORT_SCAN_COMMAND
+;Function: Print $100 databytes from specified location
+;***************************************************************************
+PSC_1: DEFB 'Port Scan Command', 0Dh, 0Ah, EOS
+PSC_3: DEFB '     0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F', 0Dh, 0Ah, EOS
+
+PSCOMMAND:
+        LD 		HL,PSC_1			;Print some messages 
+        CALL    PRINT_STRING
+        
+        LD 		HL,PSC_3			;Print some messages 
+        CALL    PRINT_STRING
+
+        LD		BC, 0h
+        XOR     A
+PS_NEWPL:                   ; Start new line, start with port address
+        LD      A,C
+        CALL	PRINTHBYTE
+        LD		A, ' '
+        CALL	PRINT_CHAR  ; address - contents separator
+        CALL	PRINT_CHAR
+        
+PS_LOOP:                    ; Print port contents
+        IN		A, (C)
+        CALL	PRINTHBYTE
+        LD		A, ' '
+        CALL	PRINT_CHAR ; inter-port-contents separator
+        
+        INC		BC
+        XOR		A
+        ADD		A, B
+        JR      NZ, PS_END  ; check for all ports done
+        
+        LD		A, C
+        AND		00Fh	; multiples of 16
+        JR      NZ, PS_LOOP	; line not yet full
+        
+        CALL	PRINT_NEW_LINE
+        JR		PS_NEWPL
+        
+PS_CONT:                    ; continue on same line
+        LD		A, ' '
+        CALL	PRINT_CHAR
+        JR		PS_LOOP
+
+        
+PS_END:                     ; done all ports
+        RET
+
+;***************************************************************************
+; Jump to memory Command
+; Function: Execute a program at memory location
 ;***************************************************************************
 
-UPLOAD_COMMAND:
-			LD		A, 01h
-			LD		(MUTE), A 		; suppress echo
-			CALL	GET_CHAR
-			CP		ESC
-			JP		Z, I_NOERR
-			CP		':'
-			JR		NZ, UPLOAD_COMMAND ; Loop here until a ':' or ESC is received
+MGo_1:	DEFB	'Excute program at a Memory Command', 0Dh, 0Ah, EOS
 
-; From: https://www.z80cpu.eu/mirrors/www.z80.info/zip/z80asm.zip
-INTLIN_CMD:	
-			LD		HL, UPLOADBUF
-			LD		(MVADDR), HL
-			; *** record size ***
-			CALL	GETHEXBYTE		;Get record length
-			LD		(ULSIZE), A
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			JP		NZ, I_PASSERR
-			LD		A, (ULSIZE)		; Check for maximum buffer size
-			CP		ULBUFSIZE
-			JP		NC, I_ERRBSZ
-			; *** address MSB ***
-			CALL	GETHEXBYTE		;Get record address hi byte
-			LD		(MVADDR+5), A			;Put in move dest MSB
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			JP		NZ, I_PASSERR
-			LD		A, (MVADDR+5)
-			; *** address LSB ***
-			CALL	GETHEXBYTE		;Get record address lo byte
-			LD		(MVADDR+4), A			;Put in move dest LSB
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			JP		NZ, I_PASSERR
-			LD		A, (MVADDR+4)
-			; *** record type ***
-			CALL	GETHEXBYTE		; Check record type
-			LD		(IERECTYPE), A
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			JP		NZ, I_PASSERR
-			LD		A, (IERECTYPE)
-			CP		HI_DATA
-			JP		Z, I_ULPREP		; To data upload
-			CP		HI_END
-			JP		Z, I_HIEND		; Done with end record
-			
-			JR		I_ERRTYP
-I_ULPREP:
-			LD		A, (ULSIZE)
-;			INC		A			; off-by-one because of decrement before test of DJNZ ?
-			LD		(DEBUG), A
-			LD		B, A
-			LD		HL, UPLOADBUF
+MGo_2:	DEFB	'Memory location: ', EOS
 
-INTLIN_LP:
-			LD		A, B
-			LD		(DEBUG), A
-			; *** data bytes ***
-			CALL	GETHEXBYTE		;Get record data byte
-			LD		(HL), A			;Save byte to memory
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			JR		NZ, I_NOERR
-			INC		HL				;Next buffer address
-			LD		A, (DEBUG)
-			DJNZ	INTLIN_LP		;Decrement count and jump if not finished
-			; *** checksum byte ***
-			CALL	GETHEXBYTE
-			LD		(IECHECKSUM), A
-			LD		A, (ERRFLAG)
-			CP		E_NONE
-			JR		NZ, I_NOERR
-			; *** close ***
-			LD		A, 00h
-			LD		(MUTE), A 		; allow echo
-			; *** checksum calculate ***
-			CALL	I_CHECKSUM
-			
-			LD		B, A			; compare calculated checksum
-			LD		A, (IECHECKSUM)	; with record value
-			CP		B
-			JR		NZ, I_ERRCHKSM
+GO_COMMAND:
+        LD		HL, MGo_1	; Print some messages
+        CALL	PRINT_STRING
+        LD		HL, MGo_2	; Print some messages
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
 
-			; *** print response ***
-			LD		HL, (MVADDR+4)	;print the line starting address as response
-			CALL	PRINTHWORD		;
-			CALL	PRINT_NEW_LINE
-			
-			LD		A, 01h
-			LD		(MUTE), A 		; disable echo
-			; Upload to destination
-			LD		HL, UPLOADBUF
-			LD		DE, (MVADDR+4)
-			LD		B, 0
-			LD		A, (ULSIZE)
-			LD		C, A
-			LDIR
-
-			JP		INTLIN_CMD	; next record
-I_PASSERR:
-I_NOERR:
-			LD		A, 00h
-			LD		(MUTE), A 		; allow echo
-			RET
-
-I_ERRBSZ:	LD		A, E_BUFSIZE
-			LD		(ERRFLAG), A
-			LD		A, 00h
-			LD		(MUTE), A 		; allow echo
-			RET
-			
-I_ERRTYP:	LD		A, E_HITYP
-			LD		(ERRFLAG), A
-			LD		A, 00h
-			LD		(MUTE), A 		; allow echo
-			RET
-
-I_ERRCHKSM:
-			LD		A, E_HICKSM
-			LD		(ERRFLAG), A
-			LD		A, 00h
-			LD		(MUTE), A 		; allow echo
-			RET
-			;
-I_HIEND:	LD		A, E_HIEND
-			LD		(ERRFLAG), A
-			LD		A, 00h
-			LD		(MUTE), A 		; allow echo
-			CALL	GETHEXBYTE		; wait for checksum
-			RET
-
-I_CHECKSUM:
-			LD		A, (ULSIZE)		; rec size
-			LD		B, A
-			INC		B				; compensate for decrement before compare?
-			LD		HL, MVADDR+5	; dest MSB
-			ADD		A, (HL)
-			LD		HL, MVADDR+4	; dest LSB
-			ADD		A, (HL)
-			;ADD		A, 0		; record type
-			LD		HL, UPLOADBUF
-I_CKSMLP:	
-			ADD 	A, (HL)
-			INC		HL
-			DJNZ	I_CKSMLP
-			LD		B, A
-			LD		A, 0FFh
-			SBC		A, B
-			INC		A
-			LD		(IECKSMCLC), A
-			RET
+        JP       (HL)	; Jump
