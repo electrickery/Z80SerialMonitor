@@ -6,7 +6,8 @@ based on the Z80 microprocessor.
 ![Development setup including MPF-1B with Z80 DART modification, ROMEmu in U7 ROM socket, pl2303 serial-USB converter.](MPF1DevSetup.jpg)
 
 The ![MPF-1(B)](http://electrickery.connected.by.freedominter.net/comp/mpf1/) is a single board computer designed 
-and build in the early 1980's for computer education. It is a Z80 based board with the traditional 7-segment display, a small keyboard and monitor in EPROM. The idea is to create simple programs in menonics, assemble it by hand and
+and build in the early 1980's for computer education. It is a Z80 based board with the traditional 7-segment 
+display, a small keyboard and monitor in EPROM. The idea is to create simple programs in menonics, assemble it by hand and
 enter the program code in hexadecimal format. The monitor supports a simple single step mode and code to inspect 
 memory and registers.
 
@@ -31,12 +32,16 @@ native Z80-CTC as baudrate clock source.
 More information on the hardware modification can be found at 
 http://electrickery.nl/comp/mpf1/modifications.html#dart.
 
-An other option is the Serial_MEM_MPF_B board, that hast the DART, the monitor ROM and a configurable amount of RAM.
+An other option is the Serial_MEM_MPF_B board, that has the DART, the monitor ROM and a configurable amount of RAM.
 The KiCAD files are in the KiCAD directory. The board has a minor flaw, but it is easy to fix (connect U7-18 with U7-20).
+
+More info on the site linked above.
 
 ## Porting of a monitor
 
-The starting point for the monitor is the monitor from: https://github.com/MatthewWCook/Z80Project/tree/master/Z80%20Monitor%20Part%201/Code. Only some addresses had to be changed and the 16550 UART file replaced by Z80 DART code. 
+The starting point for the monitor is the monitor from: 
+https://github.com/MatthewWCook/Z80Project/tree/master/Z80%20Monitor%20Part%201/Code. 
+Only some addresses had to be changed and the 16550 UART file replaced by Z80 DART code. 
 
 This monitor for a D.I.Y. Z80 system only has three options, ideal for porting and extending afterwards. 
 
@@ -51,7 +56,8 @@ z80pack/z80asm can generate hex-intel directly, making is easy to upload the cod
 
 A very useful part of the project, certainly for code fragments larger than a few bytes is a temporary upload
 facility. For this an Arduino based ROM-emulator is used, which allows transferring code to a RAM chip which is 
-part from the Z80 address space. See https://github.com/electrickery/ROM-emulator. This is a comfortable base to extend the monitor with it's own upload functionality. 
+part from the Z80 address space. See https://github.com/electrickery/ROM-emulator. This is a comfortable base 
+to extend the monitor with it's own upload functionality. 
 
 Basically this does what is required, but limited to the memory area controlled by the emulator. As programming 
 is in C++, writing hex-intel upload code is quite trival. The goal here is to redo this and more in Z80 assembly.
