@@ -26,13 +26,13 @@ The project has several parts:
 The MPF-1 has a bread-board area which is used to add a Z80-DART integrated circuit. The initial version used the
 native Z80-CTC as baudrate clock source. 
 
-An other option is the Serial_MEM_MPF_B board, that hast the DART, the monitor ROM and a configurable amount of RAM.
-The KiCAD files are in the KiCAD directory. The board has a minor flaw, but it is easy to fix (connect U7-18 with U7-20).
-
 ![Modification of the MPF-1(B)](./MPF-Z80DART.pdf)
 
 More information on the hardware modification can be found at 
 http://electrickery.nl/comp/mpf1/modifications.html#dart.
+
+An other option is the Serial_MEM_MPF_B board, that hast the DART, the monitor ROM and a configurable amount of RAM.
+The KiCAD files are in the KiCAD directory. The board has a minor flaw, but it is easy to fix (connect U7-18 with U7-20).
 
 ## Porting of a monitor
 
