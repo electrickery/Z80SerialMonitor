@@ -24,7 +24,10 @@ The project has several parts:
 ## Hardware
 
 The MPF-1 has a bread-board area which is used to add a Z80-DART integrated circuit. The initial version used the
-native Z80-CTC as baudrate clock source.
+native Z80-CTC as baudrate clock source. 
+
+An other option is the Serial_MEM_MPF_B board, that hast the DART, the monitor ROM and a configurable amount of RAM.
+The KiCAD files are in the KiCAD directory. The board has a minor flaw, but it is easy to fix (connect U7-18 with U7-20).
 
 ![Modification of the MPF-1(B)](./MPF-Z80DART.pdf)
 
@@ -79,4 +82,4 @@ Changes made to the dump command:
 
 A planned change is to add a download of hex-intel via the monitor too, making a comparison on the host possible.
 
-fjkraan@electrickery.nl, 20220125
+fjkraan@electrickery.nl, 20220216
