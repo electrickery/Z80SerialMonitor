@@ -7,13 +7,13 @@
 ;  CREATE DATE :	05 May 15 / 2021-01-01
 ;***************************************************************************
 
-ROM_BOTTOM:  EQU    02000h		;Bottom address of ROM
-ROM_TOP:     EQU    ROM_BOTTOM + 00FFFh		;Top address of ROM
+ROM_BOTTOM:  EQU    0F000h		; Bottom address of ROM
+ROM_TOP:     EQU    ROM_BOTTOM + 00FFFh		; Top address of ROM
 
-RAM_BOTTOM:  EQU    01800h		;Bottom address of RAM
-RAM_TOP:     EQU    RAM_BOTTOM + 0FFh		;Top address of RAM	
+RAM_BOTTOM:  EQU    01800h		; Bottom address of RAM
+RAM_TOP:     EQU    RAM_BOTTOM + 0FFh		; Top address of RAM	
 
-UART_BASE:  EQU     060h
+UART_BASE:  EQU     0E0h        ; Base port address, DART uses 4 ports
 
 MPFMON:     EQU    0030h
 ASCDMPBUF:  EQU    RAM_BOTTOM + 0h	    	;Buffer to construct ASCII part of memory dump
@@ -60,7 +60,7 @@ ROMB1:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '0'
             IFEQ (ROM_BOTTOM & 0C00h), 0C00h
 ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '7'
             ELSE
-            IFEQ (ROM_BOTTOM & 0A00h), 0A00h
+            IFEQ (ROM_BOTTOM & 0A0h), 0A00h
 ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '7'
             ELSE
 ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '0'
@@ -78,12 +78,12 @@ ROMB3:      EQU    (ROM_BOTTOM & 000F0h) / 10h   + '0'
             ENDIF
              
             IFEQ (ROM_BOTTOM & 0Ch), 0Ch
-ROMB4:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
+ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '7'
             ELSE
             IFEQ (ROM_BOTTOM & 0Ah), 0Ah
-ROMB4:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
+ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '7'
             ELSE
-ROMB4:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '0'
+ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '0'
             ENDIF
             ENDIF
 
@@ -98,12 +98,12 @@ UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '0'
             ENDIF
              
             IFEQ (UART_BASE & 0Ch), 0Ch
-UART2:      EQU    (UART_BASE & 00Fh) / 10h   + '7'
+UART2:      EQU    (UART_BASE & 00Fh) / 1h   + '7'
             ELSE
             IFEQ (UART_BASE & 0Ah), 0Ah
-UART2:      EQU    (UART_BASE & 00Fh) / 10h   + '7'
+UART2:      EQU    (UART_BASE & 00Fh) / 1h   + '7'
             ELSE
-UART2:      EQU    (UART_BASE & 00Fh) / 10h   + '0'
+UART2:      EQU    (UART_BASE & 00Fh) / 1h   + '0'
             ENDIF
             ENDIF
 
@@ -166,8 +166,8 @@ RESET_COMMAND:
 MNMSG1:    DEFB    0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
 MNMSG2:    DEFB    0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2022 F.J.Kraan', 0Dh, 0Ah, EOS
 MNMSG3:    DEFB    'Monitor v0.3, ROM: ', ROMB1, ROMB2, ROMB3, ROMB4, 'h DART: ', UART1, UART2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
-MONHLP:     DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
-MONERR:     DEFB    0Dh, 0AH, 'Error in params: ', EOS
+MONHLP:    DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
+MONERR:    DEFB    0Dh, 0AH, 'Error in params: ', EOS
 
 PRINT_MON_HDR:
         CALL    CLEAR_SCREEN        ;Clear the terminal screen
