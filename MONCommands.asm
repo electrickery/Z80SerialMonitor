@@ -23,6 +23,7 @@ HLPMSGg: DEFB 'G - jump to memory value', 0Dh, 0Ah, EOS
 HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
 HLPMSGr: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
+HLPMSGs: DEFB 'S - calculate checksum for memory range', 0Dh, 0Ah, EOS
 HLPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HLPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
 
@@ -47,6 +48,8 @@ HELP_COMMAND:
         LD      HL, HLPMSGp
         CALL    PRINT_STRING
         LD      HL, HLPMSGr
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGs
         CALL    PRINT_STRING
         LD      HL, HLPMSG8
         CALL    PRINT_STRING
@@ -411,3 +414,93 @@ GO_COMMAND:
         RET		NZ
 
         JP       (HL)	; Jump
+        
+;***************************************************************************
+; 
+; Function: Calculate checksum for address range
+;***************************************************************************
+
+CCKSM_1:	DEFB	'Calcutale checksum for memory range Command', 0Dh, 0Ah, EOS
+
+CCKSM_2:	DEFB	'Start location: ', EOS
+
+CCKSM_3:	DEFB	'End location: ', EOS
+
+CCKSM_4:    DEFB    'Checksum: ', EOS
+
+CCKSM_COMMAND:
+        LD		HL, CCKSM_1
+        CALL	PRINT_STRING
+        
+        LD		HL, CCKSM_2	    ; start
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        LD      (MVADDR+0), HL
+        CALL	PRINT_NEW_LINE
+        
+        LD		HL, CCKSM_3     ; end
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        LD      (MVADDR+2), HL
+        CALL	PRINT_NEW_LINE
+        
+        LD      BC, (MVADDR+0)  ; starting point
+        LD      DE, (MVADDR+2)  ; end point
+        
+        LD      HL, 0           ; the checksum value
+CCSM_1:                     ; main checksum loop
+        LD      A, C
+        CP      E
+        JR      NZ, CCSM_3      ; on no match in LSB, skip the MSB
+        LD      A, B
+        CP      D
+        JR      Z, CCSM_4       ; MSB matches too
+CCSM_3:                     ; still going, add next value to checksum
+        LD      A, (BC)
+        ADD     A, L
+        LD      L, A
+        JR      NC, CCSM_2      ; check carry in checksum LSB
+        INC     H
+CCSM_2:                     ; done this value
+        INC     BC
+        JR      CCSM_1
+        
+CCSM_4:                     ; running address matches end, done
+        PUSH    HL
+        LD		HL, CCKSM_4     ; end
+        CALL	PRINT_STRING
+        POP     HL
+        CALL    PRINTHWORD
+        CALL    PRINT_NEW_LINE
+
+        RET
+
+
+;***************************************************************************
+; Load hex-intel record
+;
+;***************************************************************************
+
+HEXI_COMMAND:
+        LD      HL, UPLOADBUF
+        LD      (RX_READ_P), HL
+        LD      (RX_WRITE_P), HL
+HXI_LOOP:
+        CALL    UART_RX_RDY
+        CALL    UART_RX
+        LD      HL, (RX_WRITE_P)
+        LD      (HL), A
+        INC     HL
+        LD      (RX_WRITE_P), HL
+        AND     A
+        CP      0Ah
+        JR      Z, HXI_DONE
+        JR      HXI_LOOP
+HXI_DONE:       
+        RET

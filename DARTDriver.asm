@@ -100,7 +100,7 @@ UART_TX:
 UART_RX_RDY:
 RX_NOT_RDY:
         CALL    RX_CHK
-        JR      Z, RX_NOT_RDY		; If not, wait
+        JR      Z, RX_NOT_RDY		; If rx_ready_bit zero, wait
         RET
 
 ;***************************************************************************
@@ -109,7 +109,7 @@ RX_NOT_RDY:
 ;***************************************************************************
 RX_CHK:
         IN      A, (DRTCB)		; 
-        AND     RXCHARAVL		; Has some char arrived?
+        AND     RXCHARAVL		; Mask other bits, has some char arrived?
         RET
 
 ;***************************************************************************

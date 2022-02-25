@@ -31,8 +31,10 @@ IECHECKSUM: EQU    RAM_BOTTOM + 1Bh        ; hex-intel record checksum
 IECKSMCLC:  EQU    RAM_BOTTOM + 1Ch        ; hex-intel record
 IERECTYPE:  EQU    RAM_BOTTOM + 1Dh        ; hex-intel record type
 DEBUG:      EQU    RAM_BOTTOM + 1Eh
-UPLOADBUF:  EQU    RAM_BOTTOM + 20h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
-ULBEND:     EQU    RAM_BOTTOM + 40h
+RX_READ_P:  EQU    RAM_BOTTOM + 20h     ; read pointer
+RX_WRITE_P: EQU    RAM_BOTTOM + 22h     ; write pointer
+UPLOADBUF:  EQU    RAM_BOTTOM + 24h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
+ULBEND:     EQU    RAM_BOTTOM + 24h + 50h ; a 20 byte hex-intel record us 75 bytes...
 ULBUFSIZE:  EQU    ULBEND-UPLOADBUF+1
 
 ; Error codes intel Hex record
@@ -169,7 +171,7 @@ RESET_COMMAND:
 ;***************************************************************************
 MNMSG1:    DEFB    0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
 MNMSG2:    DEFB    0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2022 F.J.Kraan', 0Dh, 0Ah, EOS
-MNMSG3:    DEFB    'Monitor v0.3, ROM: ', ROMB1, ROMB2, ROMB3, ROMB4, 'h DART: ', UART1, UART2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
+MNMSG3:    DEFB    'Monitor v0.4, ROM: ', ROMB1, ROMB2, ROMB3, ROMB4, 'h DART: ', UART1, UART2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
 MONHLP:    DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
 MONERR:    DEFB    0Dh, 0AH, 'Error in params: ', EOS
 
@@ -231,6 +233,10 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         CALL    Z,PREVP_COMMAND
         CP      'E'
         CALL    Z,EDIT_COMMAND
+        CP      ':'
+        CALL    Z,HEXI_COMMAND
+        CP      'S'
+        CALL    Z,CCKSM_COMMAND
         CALL    ERROR_CHK
         RET
 
