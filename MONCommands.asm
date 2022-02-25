@@ -452,8 +452,9 @@ CCKSM_COMMAND:
         
         LD      BC, (MVADDR+0)  ; starting point
         LD      DE, (MVADDR+2)  ; end point
-        
         LD      HL, 0           ; the checksum value
+        LD      A, 0
+        LD      (CHKSUM_C), A   ; checksum overflow
 CCSM_1:                     ; main checksum loop
         LD      A, C
         CP      E
@@ -466,7 +467,13 @@ CCSM_3:                     ; still going, add next value to checksum
         ADD     A, L
         LD      L, A
         JR      NC, CCSM_2      ; check carry in checksum LSB
-        INC     H
+        LD      A, H
+        ADD     A, 1
+        LD      H, A
+        JR      NC, CCSM_2
+        LD      A, (CHKSUM_C)
+        INC     A
+        LD      (CHKSUM_C), A
 CCSM_2:                     ; done this value
         INC     BC
         JR      CCSM_1
@@ -475,6 +482,8 @@ CCSM_4:                     ; running address matches end, done
         PUSH    HL
         LD		HL, CCKSM_4     ; end
         CALL	PRINT_STRING
+        LD      A, (CHKSUM_C)
+        CALL    PRINTHBYTE      ; checksum overflow first
         POP     HL
         CALL    PRINTHWORD
         CALL    PRINT_NEW_LINE

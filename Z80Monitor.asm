@@ -36,6 +36,7 @@ RX_WRITE_P: EQU    RAM_BOTTOM + 22h     ; write pointer
 UPLOADBUF:  EQU    RAM_BOTTOM + 24h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
 ULBEND:     EQU    RAM_BOTTOM + 24h + 50h ; a 20 byte hex-intel record us 75 bytes...
 ULBUFSIZE:  EQU    ULBEND-UPLOADBUF+1
+CHKSUM_C:   EQU    RAM_BOTTOM + 24h + 51h
 
 ; Error codes intel Hex record
 E_NONE:     EQU    00h
