@@ -3,17 +3,21 @@
 ;  PURPOSE:			ROM Monitor Program
 ;  ASSEMBLER:		original: TASM 3.2 , converted to z80pack/z80asm
 ;  LICENCE:			The MIT Licence
-;  AUTHOR :			MCook
+;  AUTHOR :			MCook. Extended MPF-I version: F.J. Kraan
 ;  CREATE DATE :	05 May 15 / 2021-01-01
 ;***************************************************************************
 
-ROM_BOTTOM:  EQU    0F000h		; Bottom address of ROM
+            INCLUDE CONSTANTS.asm ; copy or edit one of the 
+                                  ; CONSTANTS-aaaa-pp.asm files to
+                                  ; CONSTANTS.asm
+
+;ROM_BOTTOM:  EQU    0F000h		; Bottom address of ROM
 ROM_TOP:     EQU    ROM_BOTTOM + 00FFFh		; Top address of ROM
 
-RAM_BOTTOM:  EQU    01800h		; Bottom address of RAM
+;RAM_BOTTOM:  EQU    01800h		; Bottom address of RAM
 RAM_TOP:     EQU    RAM_BOTTOM + 0FFh		; Top address of RAM	
 
-UART_BASE:  EQU     0E0h        ; Base port address, DART uses 4 ports
+;UART_BASE:  EQU     0E0h        ; Base port address, DART uses 4 ports
 
 MPFMON:     EQU    0030h
 ASCDMPBUF:  EQU    RAM_BOTTOM + 0h	    	;Buffer to construct ASCII part of memory dump
