@@ -416,11 +416,12 @@ GO_COMMAND:
         JP       (HL)	; Jump
         
 ;***************************************************************************
-; 
-; Function: Calculate checksum for address range
+; Checksum generator. Add memory values in a three byte counter. The last
+; included location is end point - 1.
+; Function: Calculate checksum for address range in three bytes
 ;***************************************************************************
 
-CCKSM_1:	DEFB	'Calcutale checksum for memory range Command', 0Dh, 0Ah, EOS
+CCKSM_1:	DEFB	'Calculate checksum for memory range Command', 0Dh, 0Ah, EOS
 
 CCKSM_2:	DEFB	'Start location: ', EOS
 
@@ -497,6 +498,8 @@ CCSM_4:                     ; running address matches end, done
 ;***************************************************************************
 
 HEXI_COMMAND:
+        LD      A, 1
+        LD      (MUTE), A
         LD      HL, UPLOADBUF
         LD      (RX_READ_P), HL
         LD      (RX_WRITE_P), HL
@@ -511,5 +514,59 @@ HXI_LOOP:
         CP      0Ah
         JR      Z, HXI_DONE
         JR      HXI_LOOP
-HXI_DONE:       
+HXI_DONE:  
+        LD      A, 0
+        LD      (MUTE), A
+        
+        LD      HL, UPLOADBUF + 2
+        LD      A, (HL)
+        CALL    PRINT_CHAR
+        INC     HL
+        LD      A, (HL)
+        CALL    PRINT_CHAR
+        INC     HL
+        LD      A, (HL)
+        CALL    PRINT_CHAR
+        INC     HL
+        LD      A, (HL)
+        CALL    PRINT_CHAR
+        CALL    PRINT_NEW_LINE
+        
+        LD      A, XOFF
+        CALL    PRINT_CHAR
+        
+        CALL    PROC_SIZ
+        CALL    PROC_ADDR
+        
+        RET
+
+PROC_SIZ:
+        LD      HL, UPLOADBUF
+        LD      A, (HL)
+        CALL    CHAR_ISHEX
+        LD      A, C
+        JR      NC, PH_NOHEX
+        LD      A, (HL)
+        CALL    CHAR2NIB
+        RLC     A
+        RLC     A
+        RLC     A
+        RLC     A
+        LD      B, A
+        INC     HL
+        LD      A, (HL)
+        CALL    CHAR2NIB
+        ADD     A, B
+        LD      A, (ULSIZE)
+        JR      PH_DONE
+
+PH_NOHEX:
+        LD      A, E_NOHEX
+        LD      (ERRFLAG), A
+        
+PH_DONE:
+        RET
+
+PROC_ADDR:
+
         RET

@@ -7,6 +7,9 @@
 ;  CREATE DATE :	05 May 15 / 2021-01-01
 ;***************************************************************************
 
+VERSMYR:    EQU     '0'
+VERSMIN:    EQU     '5'
+
             INCLUDE CONSTANTS.asm ; copy or edit one of the 
                                   ; CONSTANTS-aaaa-pp.asm files to
                                   ; CONSTANTS.asm
@@ -51,7 +54,8 @@ HI_DATA:    EQU    00h
 HI_END:     EQU    01h
 
 ESC:        EQU    01Bh		; 
-EOS:        EQU    0FFh		; End of string
+EOS:        EQU    000h		; End of string
+MUTEON:     EQU    001h
 
 ; Elaborate logic/arithmetic to calculate ROM & UART base address digits
             IFEQ (ROM_BOTTOM & 0C000h), 0C000h
@@ -93,7 +97,7 @@ ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '7'
 ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '0'
             ENDIF
             ENDIF
-
+            
             IFEQ (UART_BASE & 0C0h), 0C0h
 UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '7'
             ELSE
@@ -114,24 +118,18 @@ UART2:      EQU    (UART_BASE & 00Fh) / 1h   + '0'
             ENDIF
             ENDIF
 
-; Only for stand-alone usage
-;			ORG 0000h
-
-START:
-;			DI							;Disable interrupts
-;			JP 		MAIN  				;Jump to the MAIN routine
-;			
-;			ORG 0038h
-
-;INT_CATCH:
-;			JP 		INT_CATCH			;INF loop to catch interrupts (not enabled)
-;			
-;			ORG 0066h
-
-;NMI_CATCH:
-;			JP		NMI_CATCH			;INF loop to catch interrupts (not enabled)
-;			
 			ORG ROM_BOTTOM
+ROUTINES:
+R_MAIN:         JP      MAIN            ; init DART and starts command loop
+R_U_INIT:       JP      UART_INIT       ; configures DARTchannel B 
+R_PRT_NL:       JP      PRINT_NEW_LINE  ; sends a CR LF
+R_PRT_STR:      JP      PRINT_STRING    ; sends a NULL terminated string
+                DEFS    3
+                DEFS    3
+                DEFS    3
+                DEFS    3
+            
+            ORG ROM_BOTTOM + 24     ; room for eight routine entries
 ;***************************************************************************
 ;MAIN
 ;Function: Entrance to user program
@@ -170,11 +168,13 @@ RESET_COMMAND:
 ;PRINT_MON_HDR
 ;Function: Print out program header info
 ;***************************************************************************
-MNMSG1:    DEFB    0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
-MNMSG2:    DEFB    0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2022 F.J.Kraan', 0Dh, 0Ah, EOS
-MNMSG3:    DEFB    'Monitor v0.4, ROM: ', ROMB1, ROMB2, ROMB3, ROMB4, 'h DART: ', UART1, UART2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
-MONHLP:    DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
-MONERR:    DEFB    0Dh, 0AH, 'Error in params: ', EOS
+MNMSG1:     DEFB    0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
+MNMSG2:     DEFB    0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2022 F.J.Kraan', 0Dh, 0Ah, EOS
+MNMSG3:     DEFB    'Monitor v', VERSMYR, '.', VERSMIN, 
+            DEFB    ' ROM: ', ROMB1, ROMB2, ROMB3, ROMB4
+            DEFB    'h DART: ', UART1, UART2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
+MONHLP:     DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
+MONERR:     DEFB    0Dh, 0AH, 'Error in params: ', EOS
 
 PRINT_MON_HDR:
         CALL    CLEAR_SCREEN        ;Clear the terminal screen

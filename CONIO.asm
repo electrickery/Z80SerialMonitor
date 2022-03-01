@@ -36,7 +36,7 @@ PRINT_CHAR:
 OPRINTCHAR:
         LD		C, A
         LD		A, (MUTE)
-        CP		01H		; compare with 1=true
+        CP		MUTEON		; compare with 1=true
         JR		Z, PRTSKIP
         LD		A, C
         CALL	PRINT_CHAR
@@ -241,3 +241,15 @@ PRINTHWORD:
 ;		POP		HL
         RET			
 
+;***************************************************************************
+;CHAR TO NIBBLE
+;Transforms the HEX-character in A to a value fitting in a nibble
+;***************************************************************************
+CHAR2NIB:
+        SUB     '0'
+        CP      015h
+        JR      NC, C2N_DONE
+        SUB     005h
+c2N_DONE:
+        AND     0Fh
+        RET
