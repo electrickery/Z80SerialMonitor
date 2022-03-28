@@ -253,3 +253,52 @@ CHAR2NIB:
 c2N_DONE:
         AND     0Fh
         RET
+
+;***************************************************************************
+;PRT4BIT
+;Function: Prints least significant nibble of A as bits
+;***************************************************************************
+PRT4BIT:
+        LD      C, A
+        BIT     3, A
+        CALL    PRTBIT
+        LD      A, C
+        BIT     2, A
+        CALL    PRTBIT
+        LD      A, C
+        BIT     1, A
+        CALL    PRTBIT
+        LD      A, C
+        BIT     0, A
+        CALL    PRTBIT
+        RET
+        
+PRTBIT:
+        JR      Z, PB0
+        LD      A, '1'
+        JR      PBPRT
+        
+PB0:
+        LD      A, '0'
+        JR      PBPRT 
+        
+PBPRT:
+        CALL    PRINT_CHAR
+        RET
+
+;***************************************************************************
+;PRT2BIT
+;Function: Special case: print the MPF's user flag bits
+;***************************************************************************
+        
+PRT2BIT:
+        LD      C, A
+        BIT     4, A
+        CALL    PRTBIT
+        
+        LD      A, C
+        BIT     0, A
+        CALL    PRTBIT
+        
+        RET
+        

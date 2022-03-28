@@ -4,11 +4,11 @@
 ;  ASSEMBLER:		original: TASM 3.2 , converted to z80pack/z80asm
 ;  LICENCE:			The MIT Licence
 ;  AUTHOR :			MCook. Extended MPF-I version: F.J. Kraan
-;  CREATE DATE :	05 May 15 / 2021-01-01
+;  CREATE DATE :	05 May 15 / 2022-03-28
 ;***************************************************************************
 
 VERSMYR:    EQU     '0'
-VERSMIN:    EQU     '5'
+VERSMIN:    EQU     '6'
 
             INCLUDE CONSTANTS.asm ; copy or edit one of the 
                                   ; CONSTANTS-aaaa-pp.asm files to
@@ -37,7 +37,7 @@ DEBUG:      EQU    RAM_BOTTOM + 1Eh
 RX_READ_P:  EQU    RAM_BOTTOM + 20h     ; read pointer
 RX_WRITE_P: EQU    RAM_BOTTOM + 22h     ; write pointer
 UPLOADBUF:  EQU    RAM_BOTTOM + 24h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
-ULBEND:     EQU    RAM_BOTTOM + 24h + 50h ; a 20 byte hex-intel record us 75 bytes...
+ULBEND:     EQU    RAM_BOTTOM + 24h + 50h ; a 20h byte hex-intel record use 75 bytes...
 ULBUFSIZE:  EQU    ULBEND-UPLOADBUF+1
 CHKSUM_C:   EQU    RAM_BOTTOM + 24h + 51h
 
@@ -238,6 +238,8 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         CALL    Z,HEXI_COMMAND
         CP      'S'
         CALL    Z,CCKSM_COMMAND
+        CP      'Z'
+        CALL    Z,REGDUMP_COMMAND
         CALL    ERROR_CHK
         RET
 

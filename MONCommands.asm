@@ -24,6 +24,7 @@ HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
 HLPMSGr: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HLPMSGs: DEFB 'S - calculate checksum for memory range', 0Dh, 0Ah, EOS
+HLPMSGz: DEFB 'Z - dump user registers (STEP)', 0Dh, 0Ah, EOS
 HLPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HLPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
 
@@ -50,6 +51,8 @@ HELP_COMMAND:
         LD      HL, HLPMSGr
         CALL    PRINT_STRING
         LD      HL, HLPMSGs
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGz
         CALL    PRINT_STRING
         LD      HL, HLPMSG8
         CALL    PRINT_STRING
@@ -570,3 +573,131 @@ PH_DONE:
 PROC_ADDR:
 
         RET
+        
+USERAF: EQU     01FBCh
+USERBC: EQU     01FBEh
+USERDE: EQU     01FC0h
+USERHL: EQU     01FC2h
+UAFP:   EQU     01FC4h
+UBCP:   EQU     01FC6h
+UDEP:   EQU     01FC8h
+UHLP:   EQU     01FCAh
+USERIX: EQU     01FCCh
+USERIY: EQU     01FCEh
+USERSP: EQU     01FD0h
+USERIF: EQU     01FD2h
+FLAGH:  EQU     01FD4h
+FLAGL:  EQU     01FD6h
+FLAGHP: EQU     01FD8h
+FLAGLP: EQU     01FDAh
+USERPC: EQU     01FDCh
+        
+RDLN_1: DEFB    ' AF   BC   DE   HL   IX   IY   AF', 027h, '  BC', 027h, '  DE', 027h, '  HL', 027h, EOS
+RDLN_3: DEFB    ' SP   PC   IF   SZ-H-PNC  SZ-H-PNC', 027h  , EOS
+
+REGDUMP_COMMAND:
+        LD      HL, RDLN_1
+        CALL    PRINT_STRING
+        
+        CALL    PRINT_NEW_LINE
+        
+        LD      HL, (USERAF)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (USERBC)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (USERDE)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (USERHL)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (USERIX)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (USERIY)
+        CALL    PRINTHWORD
+        
+        LD      A, ' '
+        CALL    PRINT_CHAR
+
+        LD      HL, (UAFP)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (UBCP)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (UDEP)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (UHLP)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        CALL    PRINT_NEW_LINE
+        
+        LD      HL, RDLN_3
+        CALL    PRINT_STRING
+        
+        CALL    PRINT_NEW_LINE
+        
+        LD      HL, (USERSP)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (USERPC)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        
+        LD      HL, (USERIF)
+        CALL    PRINTHWORD
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        CALL    PRINT_CHAR
+        
+        LD      A, (FLAGH+1)
+        CALL    PRT2BIT
+        LD      A, (FLAGH)
+        CALL    PRT2BIT
+        LD      A, (FLAGL+1)
+        CALL    PRT2BIT
+        LD      A, (FLAGL)
+        CALL    PRT2BIT
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        LD      A, (FLAGHP+1)
+        CALL    PRT2BIT
+        LD      A, (FLAGHP)
+        CALL    PRT2BIT
+        LD      A, (FLAGLP+1)
+        CALL    PRT2BIT
+        LD      A, (FLAGLP)
+        CALL    PRT2BIT
+        
+        RET
+        
+REGDMPJ:
+        CALL    REGDUMP_COMMAND
+        JP      MPFMON  ; return to monitor
