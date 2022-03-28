@@ -254,27 +254,9 @@ c2N_DONE:
         AND     0Fh
         RET
 
-;***************************************************************************
-;PRT4BIT
-;Function: Prints least significant nibble of A as bits
-;***************************************************************************
-PRT4BIT:
-        LD      C, A
-        BIT     3, A
-        CALL    PRTBIT
-        LD      A, C
-        BIT     2, A
-        CALL    PRTBIT
-        LD      A, C
-        BIT     1, A
-        CALL    PRTBIT
-        LD      A, C
-        BIT     0, A
-        CALL    PRTBIT
-        RET
         
 PRTBIT:
-        JR      Z, PB0
+        JR      C, PB0
         LD      A, '1'
         JR      PBPRT
         
@@ -287,18 +269,22 @@ PBPRT:
         RET
 
 ;***************************************************************************
-;PRT2BIT
+;PRT8BIT
 ;Function: Special case: print the MPF's user flag bits
 ;***************************************************************************
         
-PRT2BIT:
+PRT8BIT:
         LD      C, A
-        BIT     4, A
+        LD      B, 8
+P8B1:
+        RLC     A
+        LD      C, A
         CALL    PRTBIT
-        
+        DEC     B
+        JR      Z, P8B_RET
         LD      A, C
-        BIT     0, A
-        CALL    PRTBIT
-        
+        JR      P8B1
+
+P8B_RET:        
         RET
         

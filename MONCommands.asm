@@ -675,26 +675,14 @@ REGDUMP_COMMAND:
         CALL    PRINT_CHAR
         CALL    PRINT_CHAR
         
-        LD      A, (FLAGH+1)
-        CALL    PRT2BIT
-        LD      A, (FLAGH)
-        CALL    PRT2BIT
-        LD      A, (FLAGL+1)
-        CALL    PRT2BIT
-        LD      A, (FLAGL)
-        CALL    PRT2BIT
+        LD      A, (USERAF+1)
+        CALL    PRT8BIT
         LD      A, ' '
         CALL    PRINT_CHAR
         LD      A, ' '
         CALL    PRINT_CHAR
-        LD      A, (FLAGHP+1)
-        CALL    PRT2BIT
-        LD      A, (FLAGHP)
-        CALL    PRT2BIT
-        LD      A, (FLAGLP+1)
-        CALL    PRT2BIT
-        LD      A, (FLAGLP)
-        CALL    PRT2BIT
+        LD      A, (UAFP+1)
+        CALL    PRT8BIT
         
         RET
         
