@@ -190,6 +190,31 @@ GETHEXWORD:
 GHW_ERR:
         POP		AF
         RET
+        
+;***************************************************************************
+;NIB2CHAR
+;Function: Converts the lower nibble in A into a HEX character
+;***************************************************************************
+NIB2CHAR:
+        AND     0Fh             	;Only low nibble in byte
+        ADD     A,'0'             	;Adjust for char offset
+        CP      '9' + 1         	;Is the hex digit > 9?
+        JR      C,N2C1				;Yes - Jump / No - Continue
+        ADD     A,'A' - '0' - 0Ah 	;Adjust for A-F
+N2C1:
+        RET
+
+;***************************************************************************
+;SHFTNIB
+;Function: Shift the upper nibble to the lower position
+;***************************************************************************
+SHFTNIB:
+        AND     0F0h
+        RRCA
+        RRCA
+        RRCA
+        RRCA
+        RET
     
 ;***************************************************************************
 ;PRINT_HEX_NIB
@@ -197,12 +222,7 @@ GHW_ERR:
 ;***************************************************************************
 PRINTHNIB:
         PUSH 	AF
-        AND     0Fh             	;Only low nibble in byte
-        ADD     A,'0'             	;Adjust for char offset
-        CP      '9' + 1         	;Is the hex digit > 9?
-        JP      C,PHN1	;Yes - Jump / No - Continue
-        ADD     A,'A' - '0' - 0Ah 	;Adjust for A-F
-PHN1:
+        CALL	NIB2CHAR
         CALL	PRINT_CHAR        	;Print the nibble
         POP		AF
         RET

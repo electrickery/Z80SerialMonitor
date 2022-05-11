@@ -20,6 +20,7 @@ HLPMSGd: DEFB 'D - print 100h bytes from specified location', 0Dh, 0Ah, EOS
 HLPMSGe: DEFB 'E - edit bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGf: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
 HLPMSGg: DEFB 'G - jump to memory value', 0Dh, 0Ah, EOS
+HLPMSGk: DEFB 'K - call to memory value', 0Dh, 0Ah, EOS
 HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
 HLPMSGr: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
@@ -43,6 +44,8 @@ HELP_COMMAND:
         LD      HL, HLPMSGf
         CALL    PRINT_STRING
         LD      HL, HLPMSGg
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGk
         CALL    PRINT_STRING
         LD      HL, HLPMSGm
         CALL    PRINT_STRING
@@ -402,7 +405,7 @@ PS_END:                     ; done all ports
 ; Function: Execute a program at memory location
 ;***************************************************************************
 
-MGo_1:	DEFB	'Excute program at a Memory Command', 0Dh, 0Ah, EOS
+MGo_1:	DEFB	'Execute program in memory Command', 0Dh, 0Ah, EOS
 
 MGo_2:	DEFB	'Memory location: ', EOS
 
@@ -417,6 +420,29 @@ GO_COMMAND:
         RET		NZ
 
         JP       (HL)	; Jump
+        
+;***************************************************************************
+; Call to memory Command
+; Function: Execute a program at memory location and expect a RET
+;***************************************************************************
+
+MCl_1:	DEFB	'Call program in memory Command', 0Dh, 0Ah, EOS
+
+CL_COMMAND:
+        LD		HL, MCl_1	; Print some messages
+        CALL	PRINT_STRING
+        LD		HL, MGo_2	; Print some messages
+        CALL	PRINT_STRING
+        CALL	GETHEXWORD
+        LD		A, (ERRFLAG)
+        CP		E_NONE
+        RET		NZ
+        
+        LD		DE, MON_COMMAND
+        PUSH	DE			; Add a suitable return address to the stack
+        
+        JP	(HL)
+        RET
         
 ;***************************************************************************
 ; Checksum generator. Add memory values in a three byte counter. The last

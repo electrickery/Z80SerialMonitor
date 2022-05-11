@@ -8,7 +8,7 @@
 ;***************************************************************************
 
 VERSMYR:    EQU     '0'
-VERSMIN:    EQU     '6'
+VERSMIN:    EQU     '7'
 
             INCLUDE CONSTANTS.asm ; copy or edit one of the 
                                   ; CONSTANTS-aaaa-pp.asm files to
@@ -22,7 +22,7 @@ RAM_TOP:     EQU    RAM_BOTTOM + 0FFh		; Top address of RAM
 
 ;UART_BASE:  EQU     0E0h        ; Base port address, DART uses 4 ports
 
-MPFMON:     EQU    0030h
+MPFMON:     EQU    0000h
 ASCDMPBUF:  EQU    RAM_BOTTOM + 0h	    	;Buffer to construct ASCII part of memory dump
 ASCDMPEND:  EQU    RAM_BOTTOM + 10h		;End of buffer, fill with EOS
 DMPADDR:    EQU    RAM_BOTTOM + 11h		;Last dump address
@@ -36,10 +36,16 @@ IERECTYPE:  EQU    RAM_BOTTOM + 1Dh        ; hex-intel record type
 DEBUG:      EQU    RAM_BOTTOM + 1Eh
 RX_READ_P:  EQU    RAM_BOTTOM + 20h     ; read pointer
 RX_WRITE_P: EQU    RAM_BOTTOM + 22h     ; write pointer
-UPLOADBUF:  EQU    RAM_BOTTOM + 24h		; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
-ULBEND:     EQU    RAM_BOTTOM + 24h + 50h ; a 20h byte hex-intel record use 75 bytes...
-ULBUFSIZE:  EQU    ULBEND-UPLOADBUF+1
-CHKSUM_C:   EQU    RAM_BOTTOM + 24h + 51h
+CHKSUM_C:   EQU    RAM_BOTTOM + 24h     ; uses 3 bytes
+CF_SECCNT:  EQU    RAM_BOTTOM + 27h 
+CF_LBA0:    EQU    RAM_BOTTOM + 28h
+CF_LBA1:    EQU    RAM_BOTTOM + 29h
+CF_LBA2:    EQU    RAM_BOTTOM + 2Ah
+CF_LBA3:    EQU    RAM_BOTTOM + 2Bh
+UPLOADBUF:  EQU    RAM_BOTTOM + 2Ch     ; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
+ULBUFSIZE:  EQU    50h                  ; a 20h byte hex-intel record use 75 bytes...
+ULBEND:     EQU    UPLOADBUF + ULBUFSIZE
+MSGBUF:     EQU    UPLOADBUF
 
 ; Error codes intel Hex record
 E_NONE:     EQU    00h
@@ -162,7 +168,7 @@ CLEAR_SCREEN:
 ;Function: Software Reset to $0000
 ;***************************************************************************
 RESET_COMMAND:
-			JP		MPFMON				;Jumps to $0030 (MPF-1 monitor re-entry)	
+			JP		MPFMON				;Jumps to 0000 (MPF-1 monitor re-entry)	
 			
 ;***************************************************************************
 ;PRINT_MON_HDR
@@ -228,6 +234,8 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         CALL    Z,FILL_COMMAND
         CP      'G'
         CALL    Z,GO_COMMAND
+        CP      'K'
+        CALL    Z,CL_COMMAND
         CP      '+'
         CALL    Z,NEXTP_COMMAND
         CP      '-'
@@ -262,5 +270,6 @@ CLEAR_ERROR:
         INCLUDE	DARTDriver.asm
         INCLUDE	MONCommands.asm
         INCLUDE	CONIO.asm
+        INCLUDE CFDriver.asm
 
         END
