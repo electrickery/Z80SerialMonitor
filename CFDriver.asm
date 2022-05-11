@@ -247,44 +247,14 @@ CFSECDG:
 	
 	RET
 	
-;***************************************************************************
-;CF_TEST
-;Function: Read sector 0 into RAM buffer.
-;***************************************************************************	
-CF_MSGT1: DEFB 'CF Card Test', 0Dh, 0Ah, EOS
-CF_MSGT2: DEFB 'Reading sector 0 into RAM buffer...', 0Dh, 0Ah ,EOS
-CF_MSGT3: DEFB 'Sector 0 read ...', 0Dh, 0Ah ,EOS
 
-CF_TEST:
-	LD 		HL,CF_MSGT1					;Print some messages 
-	CALL    PRINT_STRING
-	LD 		HL,CF_MSGT2	
-	CALL    PRINT_STRING
-	CALL 	CF_LP_BUSY
-	LD 		A,1
-	OUT 	(CFSECCO),A					;Deal with only one sector at a time (512 bytes)
-	CALL 	CF_LP_BUSY
-	LD      A,00h
-	OUT		(CFLBA0),A					;LBA 0:7
-	CALL 	CF_LP_BUSY
-	LD      A,00h
-	OUT		(CFLBA1),A					;LBA 8:15
-	CALL 	CF_LP_BUSY
-	LD      A,00h
-	OUT 	(CFLBA2),A					;LBA 16:23
-	CALL 	CF_LP_BUSY
-	LD 		A,0E0h						;Selects CF as master
-	OUT 	(CFLBA3),A					;LBA 24:27 + DRV 0 selected + bits 5:7=111
-	CALL	CF_RD_CMD
-	LD 		HL,CF_MSGT3			
-	CALL    PRINT_STRING
-	RET
-	
-;CF_IDENT
+;***************************************************************************
+;CF_ID_CMD
 ;Function: Issue the Identify Drive command and read the response into the data buffer
+;***************************************************************************
 CF_MSGID:	DEFB 0Dh, 0Ah, 'CF Card Identify Drive', 0Dh, 0Ah, EOS
 
-CF_IDENT:
+CF_ID_CMD:
 	LD		HL, CF_MSGID
 	CALL    PRINT_STRING
 	CALL 	CF_LP_BUSY
