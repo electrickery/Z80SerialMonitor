@@ -227,7 +227,18 @@ BDTAB	DEFB	70			;50 BAUD (TIMER MODE)
 ;UART_PRNT_STR:
 ;Function: Print out string starting at MEM location (HL) to Z80 DART
 ;***************************************************************************
-UART_PRNT_STR
+UART_PRNT_STR:
+        PUSH    AF
+UARTPRNTSTRLP:
+        LD      A,(HL)
+        CP      EOS					;Test for end byte
+        JP      Z,UART_END_PRNT_STR	;Jump if end byte is found
+        CALL    UART_TX
+        INC     HL					;Increment pointer to next char
+        JP      UARTPRNTSTRLP	    ;Transmit loop
+UART_END_PRNT_STR:
+        POP     AF
+        RET
 
 ;***************************************************************************
 ;UART_TX_READY

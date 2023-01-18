@@ -22,9 +22,9 @@ if (args.port):
     port = args.port
     
 if (args.offset):
-    offset = "F" + args.offset
+    offsetStr = "F" + args.offset
 else:
-    offset = 0
+    offsetStr = ""
 
 if (args.hexFile):
     hexFile = args.hexFile
@@ -34,28 +34,11 @@ else:
     quit(1)
 
 
-
-
-
-
-
-
-
 ser = serial.Serial(port, baud, timeout=2)  # open serial port
 LF = "\r\n"
-hexOffsetStr = ""
 sendDelay = 0.05
 time.sleep(sendDelay)
 print(ser.readline())
-
-#if len(sys.argv) <= 1:
-#    print("Usage: python3 romEmuFeed.py hexFile [hexOffset]")
-#    print("       port is " + port + " speed is " + str(baud))
-#    quit()
-#else:
-#    hexFile = sys.argv[1]
-#if len(sys.argv) > 2:
-#    hexOffsetStr = "F" + sys.argv[2]
 
 file = open(hexFile, 'r')
 lines = file.readlines()
@@ -64,8 +47,8 @@ file.close()
 print(ser.readline().strip())
 time.sleep(sendDelay)
 
-if hexOffsetStr:
-    ser.write(str.encode(hexOffsetStr + LF))
+if offsetStr:
+    ser.write(str.encode(offsetStr + LF))
     print(ser.readline().strip())
     time.sleep(sendDelay)
 
