@@ -18,7 +18,7 @@ PRINT_STRING:
 ;***************************************************************************
 ;GET_CHAR
 ;Function: Get upper case ASCII character from user into Accumulator
-;***************************************************************************			
+;***************************************************************************
 GET_CHAR:
         CALL	UART_RX				;Get char into Acc
         CALL	TO_UPPER			;Character has to be upper case
@@ -27,7 +27,7 @@ GET_CHAR:
 ;***************************************************************************
 ;PRINT_CHAR
 ;Function: Get upper case ASCII character from Accumulator to UART
-;***************************************************************************			
+;***************************************************************************
 PRINT_CHAR:
         CALL	UART_TX				;Echo character to terminal
         RET			
@@ -117,7 +117,7 @@ CIH2:
 ;Function: Translates char to HEX nibble in bottom 4 bits of A
 ;***************************************************************************
 GETHEXNIB:      
-        CALL	GET_CHAR
+        CALL    GET_CHAR
         CALL    CHAR_ISHEX      	; Is it a hex digit?
         JP      NC,NONHEXNIB 	 	; Yes - Continue / No - Exit
         CALL    OPRINTCHAR
@@ -129,9 +129,9 @@ IS_NUM:
         SUB     '0'             	; Subtract to get nib between 0->15
         AND     0Fh             	; Only return lower 4 bits
         RET
-NONHEXNIB:								; Allow exit on wrong char
-        LD		A, E_NOHEX
-        LD		(ERRFLAG), A		; Error flag
+NONHEXNIB:                              ; Allow exit on wrong char
+        LD      A, E_NOHEX
+        LD      (ERRFLAG), A	; Error flag
         RET
 
 ;***************************************************************************
@@ -140,30 +140,30 @@ NONHEXNIB:								; Allow exit on wrong char
 ;Uses: AF, D
 ;***************************************************************************
 GETHEXBYTE:
-        CALL    GETHEXNIB			; Get high nibble
+        CALL    GETHEXNIB       ; Get high nibble
         PUSH	DE
         PUSH	AF
-        LD		A, (ERRFLAG)
-        CP		E_NONE
-        JR		NZ, GHB_ERR
-        POP		AF
-        RLC     A					; Rotate nibble into high nibble
+        LD	A, (ERRFLAG)
+        CP	E_NONE
+        JR	NZ, GHB_ERR
+        POP	AF
+        RLC     A               ; Rotate nibble into high nibble
         RLC     A
         RLC     A
         RLC     A
-        LD      D,A					; Save upper four bits
-        CALL    GETHEXNIB			; Get lower nibble
+        LD      D,A             ; Save upper four bits
+        CALL    GETHEXNIB       ; Get lower nibble
         PUSH	AF
-        LD		A, (ERRFLAG)
-        CP		E_NONE
-        JR		NZ, GHB_ERR  
-        POP		AF          
-        OR      D					; Combine both nibbles
-        POP		DE
+        LD	A, (ERRFLAG)
+        CP	E_NONE
+        JR	NZ, GHB_ERR  
+        POP	AF          
+        OR      D               ; Combine both nibbles
+        POP	DE
         RET
 GHB_ERR:
-        POP		AF
-        POP		DE
+        POP	AF
+        POP	DE
         RET
 
 ;***************************************************************************
@@ -172,7 +172,7 @@ GHB_ERR:
 ;Uses: AF
 ;***************************************************************************
 GETHEXWORD:
-        CALL    GETHEXBYTE		;Get high byte
+        CALL    GETHEXBYTE	;Get high byte
         PUSH	AF
         LD		A, (ERRFLAG)
         CP		E_NONE
