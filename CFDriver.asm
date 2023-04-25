@@ -113,8 +113,6 @@ CF_RD_SECT:
 	DJNZ 	CF_RD_SECT
 	RET
 	
-	
-	
 ;***************************************************************************
 ;CF_READ
 ;Function: Read sector 0 into RAM buffer.
@@ -259,12 +257,12 @@ CF_ID_CMD:
 	CALL    PRINT_STRING
 	CALL 	CF_LP_BUSY
 	CALL	CF_LP_CMD_RDY				;Make sure drive is ready for command
-	LD		A,0ECh						;Prepare read command
-	OUT		(CFCMD),A					;Send read command
+	LD		A,0ECh						;Prepare ID drive command
+	OUT		(CFCMD),A					;Send ID drive command
 	CALL	CF_LP_DAT_RDY				;Wait until data is ready to be read
 	IN		A,(CFSTAT)					;Read status
 	AND		000000001b					;mask off error bit
-	JP		NZ,CF_RD_CMD				;Try again if error
+	JP		NZ,CF_ID_CMD				;Try again if error
 	LD 		HL,CFSECT_BUFF
 	LD 		B,0							;read 256 words (512 bytes per sector)
 CF_ID1:
@@ -278,3 +276,24 @@ CF_ID1:
 	INC 	HL
 	DJNZ 	CF_ID1
 	RET
+
+
+;***************************************************************************
+;CF_WR_CMD
+;Function: Puts a sector (512 bytes) from RAM buffer disk buffer and to the disk.
+;***************************************************************************			
+CF_WR_CMD:
+	CALL	CF_LP_CMD_RDY				;Make sure drive is ready for command
+	LD		A,0E8h						;Prepare fill buffer command
+	OUT		(CFCMD),A					;Send write buffer command
+;...	
+	
+	CALL	CF_LP_CMD_RDY				;Make sure drive is ready for command
+	LD		A,030h						;Prepare write command
+	OUT		(CFCMD),A					;Send write buffer command
+	CALL	CF_LP_DAT_RDY				;Wait until drive is ready to be written
+	IN		A,(CFSTAT)					;Read status
+	AND		000000001b					;mask off error bit
+	JP		NZ,CF_WR_CMD				;Try again if error
+	
+	
