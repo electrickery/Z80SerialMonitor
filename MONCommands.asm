@@ -22,6 +22,7 @@ HLPMSGf: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
 HLPMSGg: DEFB 'G - jump to memory value', 0Dh, 0Ah, EOS
 HLPMSGk: DEFB 'K - call to memory value', 0Dh, 0Ah, EOS
 HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
+HLPMSGo: DEFB 'O - write byte to output port', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
 HLPMSGr: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HLPMSGs: DEFB 'S - calculate checksum for memory range', 0Dh, 0Ah, EOS
@@ -48,6 +49,8 @@ HELP_COMMAND:
         LD      HL, HLPMSGk
         CALL    PRINT_STRING
         LD      HL, HLPMSGm
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGo
         CALL    PRINT_STRING
         LD      HL, HLPMSGp
         CALL    PRINT_STRING
@@ -399,6 +402,39 @@ PS_CONT:                    ; continue on same line
         
 PS_END:                     ; done all ports
         RET
+
+; untested code, 2023-04-24
+;***************************************************************************
+; Port Write Command
+; Function: Write byte to port
+;***************************************************************************
+
+MPW_1:  DEFB    'Write data to port Command', 0Dh, 0Ah
+MPW_P:  DEFB    'Port & data: ', EOS
+
+PW_COMMAND:
+        LD      HL, MPW_1
+        CALL    PRINT_STRING
+        CALL    GETHEXBYTE
+        LD      (MVADDR), A             ; Misuse Move address buffer to store port
+        LD      A, (ERRFLAG)
+        CP      E_NONE
+        RET     NZ
+        
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        CALL    GETHEXBYTE
+        LD      (MVADDR+1), A
+        LD      A, (ERRFLAG)
+        CP      E_NONE
+        RET     NZ
+        
+        LD      A, (MVADDR)
+        LD      C, A
+        LD      A, (MVADDR+1)
+        OUT     (C), A
+        RET
+
 
 ;***************************************************************************
 ; Jump to memory Command

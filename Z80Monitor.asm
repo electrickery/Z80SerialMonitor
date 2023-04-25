@@ -8,7 +8,7 @@
 ;***************************************************************************
 
 VERSMYR:    EQU     '0'
-VERSMIN:    EQU     '7'
+VERSMIN:    EQU     '8'
 
             INCLUDE CONSTANTS.asm ; copy or edit one of the 
                                   ; CONSTANTS-aaaa-pp.asm files to
@@ -224,6 +224,8 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         CALL    Z,MDCMD
         CP      'C'
         CALL    Z,CLEAR_SCREEN
+        CP      'O'
+        CALL    Z,PW_COMMAND
         CP      'P'
         CALL    Z,PSCOMMAND
         CP      'R'
