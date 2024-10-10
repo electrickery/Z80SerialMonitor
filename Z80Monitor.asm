@@ -7,12 +7,13 @@
 ;  CREATE DATE :	05 May 15 / 2022-03-28
 ;***************************************************************************
 
-VERSMYR:    EQU     '0'
-VERSMIN:    EQU     '8'
+VERSMYR:    EQU     '1'
+VERSMIN:    EQU     '0'
 
             INCLUDE CONSTANTS.asm ; copy or edit one of the 
                                   ; CONSTANTS-aaaa-pp.asm files to
                                   ; CONSTANTS.asm
+SCAN        EQU     005FEh
 
 ;ROM_BOTTOM:  EQU    0F000h		; Bottom address of ROM
 ROM_TOP:     EQU    ROM_BOTTOM + 00FFFh		; Top address of ROM
@@ -31,9 +32,9 @@ ERRFLAG:    EQU    RAM_BOTTOM + 18h		; Location to store
 MUTE:       EQU    RAM_BOTTOM + 19h		; 0 - print received chars, 1 - do not print received chars
 ULSIZE:     EQU    RAM_BOTTOM + 1Ah		; actual size of current/last hex-intel message
 IECHECKSUM: EQU    RAM_BOTTOM + 1Bh        ; hex-intel record checksum
-IECKSMCLC:  EQU    RAM_BOTTOM + 1Ch        ; hex-intel record
-IERECTYPE:  EQU    RAM_BOTTOM + 1Dh        ; hex-intel record type
-DEBUG:      EQU    RAM_BOTTOM + 1Eh
+IECADDR:    EQU    RAM_BOTTOM + 1Ch        ; hex-intel record address (2 bytes)
+IERECTYPE:  EQU    RAM_BOTTOM + 1Eh        ; hex-intel record type
+DEBUG:      EQU    RAM_BOTTOM + 1Fh
 RX_READ_P:  EQU    RAM_BOTTOM + 20h     ; read pointer
 RX_WRITE_P: EQU    RAM_BOTTOM + 22h     ; write pointer
 CHKSUM_C:   EQU    RAM_BOTTOM + 24h     ; uses 3 bytes
@@ -62,78 +63,20 @@ HI_END:     EQU    01h
 ESC:        EQU    01Bh		; 
 EOS:        EQU    000h		; End of string
 MUTEON:     EQU    001h
+LF:         EQU    00Ah
+CR:         EQU    00Dh
 
-; Elaborate logic/arithmetic to calculate ROM & UART base address digits
-            IFEQ (ROM_BOTTOM & 0C000h), 0C000h
-ROMB1:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
-            ELSE
-            IFEQ (ROM_BOTTOM & 0A000h), 0A000h
-ROMB1:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '7'
-            ELSE
-ROMB1:      EQU    (ROM_BOTTOM & 0F000h) / 1000h + '0'
-            ENDIF
-            ENDIF
-             
-            IFEQ (ROM_BOTTOM & 0C00h), 0C00h
-ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '7'
-            ELSE
-            IFEQ (ROM_BOTTOM & 0A0h), 0A00h
-ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '7'
-            ELSE
-ROMB2:      EQU    (ROM_BOTTOM & 00F00h) / 100h  + '0'
-            ENDIF
-            ENDIF
 
-            IFEQ (ROM_BOTTOM & 0C0h), 0C0h
-ROMB3:      EQU    (ROM_BOTTOM & 000F0h) / 10h   + '7'
-            ELSE
-            IFEQ (ROM_BOTTOM & 0A0h), 0A0h
-ROMB3:      EQU    (ROM_BOTTOM & 000F0h) / 10h   + '7'
-            ELSE
-ROMB3:      EQU    (ROM_BOTTOM & 000F0h) / 10h   + '0'
-            ENDIF
-            ENDIF
-             
-            IFEQ (ROM_BOTTOM & 0Ch), 0Ch
-ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '7'
-            ELSE
-            IFEQ (ROM_BOTTOM & 0Ah), 0Ah
-ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '7'
-            ELSE
-ROMB4:      EQU    (ROM_BOTTOM & 0000Fh) / 1h + '0'
-            ENDIF
-            ENDIF
-            
-            IFEQ (UART_BASE & 0C0h), 0C0h
-UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '7'
-            ELSE
-            IFEQ (UART_BASE & 0A0h), 0A0h
-UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '7'
-            ELSE
-UART1:      EQU    (UART_BASE & 0F0h) / 10h   + '0'
-            ENDIF
-            ENDIF
-             
-            IFEQ (UART_BASE & 0Ch), 0Ch
-UART2:      EQU    (UART_BASE & 00Fh) / 1h   + '7'
-            ELSE
-            IFEQ (UART_BASE & 0Ah), 0Ah
-UART2:      EQU    (UART_BASE & 00Fh) / 1h   + '7'
-            ELSE
-UART2:      EQU    (UART_BASE & 00Fh) / 1h   + '0'
-            ENDIF
-            ENDIF
-
-			ORG ROM_BOTTOM
+            ORG ROM_BOTTOM
 ROUTINES:
-R_MAIN:         JP      MAIN            ; init DART and starts command loop
-R_U_INIT:       JP      UART_INIT       ; configures DARTchannel B 
-R_PRT_NL:       JP      PRINT_NEW_LINE  ; sends a CR LF
-R_PRT_STR:      JP      PRINT_STRING    ; sends a NULL terminated string
-                DEFS    3
-                DEFS    3
-                DEFS    3
-                DEFS    3
+R_MAIN:     JP      MAIN            ; init DART and starts command loop
+R_U_INIT:   JP      UART_INIT       ; configures DARTchannel B 
+R_PRT_NL:   JP      PRINT_NEW_LINE  ; sends a CR LF
+R_PRT_STR:  JP      PRINT_STRING    ; sends a NULL terminated string
+            DEFS    3   ; spare  entries
+            DEFS    3
+            DEFS    3
+            DEFS    3
             
             ORG ROM_BOTTOM + 24     ; room for eight routine entries
 ;***************************************************************************
@@ -176,9 +119,10 @@ RESET_COMMAND:
 ;***************************************************************************
 MNMSG1:     DEFB    0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
 MNMSG2:     DEFB    0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2022 F.J.Kraan', 0Dh, 0Ah, EOS
-MNMSG3:     DEFB    'Monitor v', VERSMYR, '.', VERSMIN, 
-            DEFB    ' ROM: ', ROMB1, ROMB2, ROMB3, ROMB4
-            DEFB    'h DART: ', UART1, UART2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
+MNMSG3A:    DEFB    'Monitor v', VERSMYR, '.', VERSMIN, ', ROM: ', EOS
+MNMSG3B:    DEFB    'h, RAM: ', EOS
+MNMSG3C:    DEFB    'h, DART: ', EOS
+MNMSG3D:    DEFB    'h', 0Dh, 0AH, 0Dh, 0AH, EOS
 MONHLP:     DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
 MONERR:     DEFB    0Dh, 0AH, 'Error in params: ', EOS
 
@@ -188,7 +132,19 @@ PRINT_MON_HDR:
         CALL    PRINT_STRING
         LD      HL, MNMSG2          ;Print some extra message
         CALL    PRINT_STRING
-        LD      HL, MNMSG3
+        LD      HL, MNMSG3A         ; 1st part, version & ROM
+        CALL    PRINT_STRING
+        LD      HL, ROM_BOTTOM
+        CALL    PRINTHWORD
+        LD      HL, MNMSG3B         ; 2nd part, RAM
+        CALL    PRINT_STRING
+        LD      HL, RAM_BOTTOM
+        CALL    PRINTHWORD
+        LD      HL, MNMSG3C         ; 3rd part UART
+        CALL    PRINT_STRING
+        LD      A, UART_BASE
+        CALL    PRINTHBYTE
+        LD      HL, MNMSG3D         ; 4th part, line ending
         CALL    PRINT_STRING
         LD      HL, MONHLP
         CALL    PRINT_STRING
@@ -202,14 +158,17 @@ MON_PROMPT: DEFB '>', EOS
 
 MON_PRMPT_LOOP:
         LD      A, 00h
-        LD      (MUTE), A			; Enables echo of received chars
-        LD      HL,MON_PROMPT		;Print monitor prompt
-        CALL    PRINT_STRING		
-        CALL    GET_CHAR			;Get a character from user into Acc
+        LD      (MUTE), A       ; Enables echo of received chars
+        LD      HL,MON_PROMPT   ; Print monitor prompt
+        CALL    PRINT_STRING
+        CALL    GET_CHAR        ; Get a character from user into Acc
         CALL    PRINT_CHAR
-        CALL    PRINT_NEW_LINE		;Print a new line
-        CALL    MON_COMMAND			;Respond to user input
-        CALL    PRINT_NEW_LINE		;Print a new line	
+        CP      CR
+        JR      Z, _MPL_CR
+        CALL    PRINT_NEW_LINE  ; Print a new line
+_MPL_CR
+        CALL    MON_COMMAND     ; Respond to user input
+        CALL    PRINT_NEW_LINE  ; Print a new line
         JR      MON_PRMPT_LOOP
 
 ;***************************************************************************
@@ -248,10 +207,34 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         CALL    Z,HEXI_COMMAND
         CP      'S'
         CALL    Z,CCKSM_COMMAND
+        CP      'T'
+        CALL    Z, TRAM_COMMAND
         CP      'Z'
         CALL    Z,REGDUMP_COMMAND
         CALL    ERROR_CHK
         RET
+        
+UTERMTST:
+                ; micro terminal: scans MPF keyboard and sends ASCII 
+                ; '0'-'F' for the hex keys.
+        LD      IX, SCTXT
+        CALL    SCAN
+        CP      010h    ; A - 010h
+        JP      C, _UTHEX
+        JP      UTERMTST
+        
+_UTHEX
+        CALL    NIB2CHAR
+        CALL    PRINT_CHAR
+        JP      UTERMTST
+        
+;               dpcbafge     ; 7-segment pattern to bit  map
+SCTXT   DB      10000111b    ; t
+        DB      10101110b    ; S
+        DB      10000111b    ; t
+        DB      01000011b    ; r.
+        DB      10001111b    ; E
+        DB      10101110b    ; S
 
 ERROR_CHK:
         LD      A, (ERRFLAG)

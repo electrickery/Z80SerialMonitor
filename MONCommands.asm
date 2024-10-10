@@ -7,7 +7,7 @@
 ;  CREATE DATE :	06 May 15 / 2021-01-01
 ;***************************************************************************
 
-HEXLINES:	EQU	17 ; FIXIT: There is a off-by-one-here
+HEXLINES:	EQU	17 ; FIXIT: There is a off-by-one-error here
 
 ;***************************************************************************
 ;HELP_COMMAND
@@ -26,10 +26,10 @@ HLPMSGo: DEFB 'O - write byte to output port', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
 HLPMSGr: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
 HLPMSGs: DEFB 'S - calculate checksum for memory range', 0Dh, 0Ah, EOS
+HLPMSGt: DEFB 'T - test memory range', 0Dh, 0Ah, EOS
 HLPMSGz: DEFB 'Z - dump user registers (STEP)', 0Dh, 0Ah, EOS
 HLPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HLPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
-
 
 HELP_COMMAND:
         LD      HL, HLPMSG1     ;Print some messages
@@ -57,6 +57,8 @@ HELP_COMMAND:
         LD      HL, HLPMSGr
         CALL    PRINT_STRING
         LD      HL, HLPMSGs
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGt
         CALL    PRINT_STRING
         LD      HL, HLPMSGz
         CALL    PRINT_STRING
@@ -282,7 +284,6 @@ F_ORDERR:
         LD		(ERRFLAG), A
         RET
         
-
 ;***************************************************************************
 ; Next Page Memory Dump Command
 ; Function: Print the next block of memory
@@ -351,8 +352,6 @@ EDIT_LP:
         CALL	PRINTHWORD
         JR		EDIT_LP		; Only way out is type a non-hex char...
 
-
-
 ;***************************************************************************
 ;PORT_SCAN_COMMAND
 ;Function: Print $100 databytes from specified location
@@ -399,7 +398,6 @@ PS_CONT:                    ; continue on same line
         CALL	PRINT_CHAR
         JR		PS_LOOP
 
-        
 PS_END:                     ; done all ports
         RET
 
@@ -434,7 +432,6 @@ PW_COMMAND:
         LD      A, (MVADDR+1)
         OUT     (C), A
         RET
-
 
 ;***************************************************************************
 ; Jump to memory Command
@@ -556,12 +553,18 @@ CCSM_4:                     ; running address matches end, done
 
         RET
 
-
 ;***************************************************************************
 ; Load hex-intel record
 ;
 ;***************************************************************************
 
+HEXI_COMMAND:
+        
+; :0C 2000 00  C31820C39421C3B62AC3812A 50
+;  sz addr typ data                     chk
+
+; This part reads the record into the buffer. 
+; Note the ':' is already eaten by the command interpreter.
 HEXI_COMMAND:
         LD      A, 1
         LD      (MUTE), A
@@ -576,64 +579,49 @@ HXI_LOOP:
         INC     HL
         LD      (RX_WRITE_P), HL
         AND     A
-        CP      0Ah
-        JR      Z, HXI_DONE
+        CP      LF
+        JR      Z, HXI_RCVD
         JR      HXI_LOOP
-HXI_DONE:  
+        
+HXI_RCVD:                               ; the record is received, echo the start address
         LD      A, 0
         LD      (MUTE), A
         
-        LD      HL, UPLOADBUF + 2
+        LD      HL, UPLOADBUF + 2       ; Point to the first address char.
+        LD      B, 4
+HXIADRLP:
         LD      A, (HL)
         CALL    PRINT_CHAR
         INC     HL
-        LD      A, (HL)
-        CALL    PRINT_CHAR
-        INC     HL
-        LD      A, (HL)
-        CALL    PRINT_CHAR
-        INC     HL
+        DJNZ    HXIADRLP
+        
         LD      A, (HL)
         CALL    PRINT_CHAR
         CALL    PRINT_NEW_LINE
         
-        LD      A, XOFF
-        CALL    PRINT_CHAR
-        
-        CALL    PROC_SIZ
-        CALL    PROC_ADDR
-        
-        RET
-
-PROC_SIZ:
+HXI_PROC:                               ; processing the record
         LD      HL, UPLOADBUF
-        LD      A, (HL)
-        CALL    CHAR_ISHEX
-        LD      A, C
-        JR      NC, PH_NOHEX
-        LD      A, (HL)
-        CALL    CHAR2NIB
-        RLC     A
-        RLC     A
-        RLC     A
-        RLC     A
-        LD      B, A
-        INC     HL
-        LD      A, (HL)
-        CALL    CHAR2NIB
-        ADD     A, B
+        CALL    CHARS2BYTE              ; get record size
+        LD      (ULSIZE), A             ; store it
+        CALL    CHARS2BYTE              ; get record address, MSB
+        LD      (IECADDR+1), A          ; 
+        CALL    CHARS2BYTE              ; get record address, LSB
+        LD      (IECADDR), A 
+        CALL    CHARS2BYTE              ; get record type
+        LD      (IERECTYPE), A
+        CP      00h                     ; compare to end record
+        JR      Z, HXI_ENDR
         LD      A, (ULSIZE)
-        JR      PH_DONE
+        LD      B, A                    ; set up DJNZ loop
+        LD      DE, (IECADDR)
+HXD_LOOP:
+        CALL    CHARS2BYTE              ; get data byte
+        LD      (DE), A                 ; store it at target location
+        INC     DE
+        DJNZ    HXD_LOOP                ; repeat for all data bytes
+        CALL    CHARS2BYTE              ; Get checksum
 
-PH_NOHEX:
-        LD      A, E_NOHEX
-        LD      (ERRFLAG), A
-        
-PH_DONE:
-        RET
-
-PROC_ADDR:
-
+HXI_ENDR:                               ; Done
         RET
         
 USERAF: EQU     01FBCh
@@ -751,3 +739,146 @@ REGDUMP_COMMAND:
 REGDMPJ:
         CALL    REGDUMP_COMMAND
         JP      MPFMON  ; return to monitor
+
+; RAM test
+; Tssss eeee
+
+TRC_1: DEFB 'RAM Test Command', 0Dh, 0Ah, EOS
+TRC_2: DEFB 'Location to start in 4 digit HEX: ', EOS
+TRC_3: DEFB 0Dh, 0Ah, 'Location to end in 4 digit HEX: ', EOS
+TRC_4: DEFB 0Dh, 0Ah, 'Start address should be before End address', EOS
+
+TRAM_COMMAND:
+        LD      HL,TRC_1        ;Print some messages 
+        CALL    PRINT_STRING
+        LD      HL,TRC_2
+        CALL    PRINT_STRING
+        
+        CALL    GETHEXWORD              ;HL now points to databyte location	
+        LD      (MVADDR), HL
+        
+        LD      HL,TRC_3
+        CALL    PRINT_STRING
+        
+        CALL    GETHEXWORD              ;HL now points to databyte location	
+        LD      (MVADDR+2), HL
+        
+        LD      A, (MVADDR+3)   ; End MSB
+        LD      HL, MVADDR+1    ; (Start MSB)
+        CP      (HL)            ; A - (HL)
+        JR      Z, _TC_ZERO     ; When MSBs are on same page, test LSBs
+        JR      C, _TC_NEGM      ; When Start MSB > End MSB, report error, exit
+_TC_POS:
+        CALL    MTEST           ; When End page (MSB) is larger than Start (MSB), go to test
+        JR      _TC_DONE
+        
+_TC_ZERO:        
+        LD      A, (MVADDR+2)   ; End LSB
+        LD      HL, MVADDR+0    ; (Start LSB)
+        CP      (HL)            ; A - (HL)
+        JR      C, _TC_NEGL      ; When Start LSB > End LSB, report error, exit
+        CALL    MTEST           ; When End page (LSB) is larger than Start (LSB), go to test
+        
+        JR      _TC_DONE
+_TC_NEGM:
+_TC_NEGL:
+        LD      HL, TRC_4
+        CALL    PRINT_STRING
+        JR      _TC_DONE
+                
+_TC_DONE:        
+        RET
+        
+MTC_1: DEFB 0Dh, 0Ah, ' Phase 1: ??h to 00h ', EOS
+MTC_2: DEFB 0Dh, 0Ah, ' Phase 2: 00h to 55h ', EOS
+MTC_3: DEFB 0Dh, 0Ah, ' Phase 3: 55h to AAh ', EOS
+MTC_4: DEFB 0Dh, 0Ah, ' Phase 4: AAh to FFh ', EOS
+MTCER1: DEFB 0Dh, 0Ah, '  Error at: ', EOS
+MTCER2: DEFB ' value expected: ', EOS
+MTCER3: DEFB ' found: ', EOS
+
+MTEST:
+        ; Test strategy in four phases:
+        ; 1. Loop through start to end and for each memory location:
+        ;    Set to 00h and check new value
+        ; 2. Loop through start to end and for each memory location:
+        ;    Check old value (00h)
+        ;    Set new value 55h
+        ;    Check new value
+        ; 3. Loop through start to end and for each memory location:
+        ;   Check old value (55h)
+        ;    Set new value AAh
+        ;    Check new value 
+        ; 4. Loop through start to end and for each memory location:
+        ;   Check old value (AAh)
+        ;    Set new value FFh
+        ;    Check new value 
+        ; Report start of each phase.
+        ; Report address of first incorrect value and terminate
+
+; Phase 1
+        LD      HL, MTC_1
+        CALL    PRINT_STRING
+        LD      D, 00h
+        LD      HL, (MVADDR)    ; Start address
+        LD      BC, (MVADDR+2)  ; End address
+_MTLOOP1:
+        LD      (HL), D
+        LD      A, (HL)
+        CP      D
+        JR      NZ, _MTLPER1
+        INC     HL
+        CALL    CPADDR     
+        JR      NZ, _MTLOOP1
+; Phase 2
+        LD      HL, MTC_2
+        CALL    PRINT_STRING
+        LD      E, D
+        LD      D, 055h
+        LD      HL, (MVADDR)    ; Start address
+        LD      BC, (MVADDR+2)  ; End address
+_MTLOOP2:
+        LD      A, (HL)
+        CP      E               ; old value compare
+        JR      NZ, _MTLPER1
+        LD      (HL), D
+        LD      A, (HL)
+        CP      D               ; new value compare
+        JR      NZ, _MTLPER1
+        INC     HL
+        CALL    CPADDR     
+        JR      NZ, _MTLOOP2
+
+; Phase 3
+; Phase 4
+
+; Error handling
+_MTLPER1:
+        LD      C, A
+        PUSH    HL
+        LD      HL, MTCER1  ; at
+        CALL    PRINT_STRING
+        POP     HL
+        CALL    PRINTHWORD
+        LD      HL, MTCER2  ;   expected
+        CALL    PRINT_STRING
+        LD      A, D
+        CALL    PRINTHBYTE
+        LD      HL, MTCER3  ;   actual
+        CALL    PRINT_STRING
+        LD      A, C
+        CALL    PRINTHBYTE
+        CALL    PRINT_NEW_LINE
+        RET
+
+; **********************************************************************
+;  CPADDR - Compare two addresses, Z-flag set when equal
+; **********************************************************************
+CPADDR:
+        LD      A, B        ; End MSB
+        CP      H           ; Start MSB :  B - H
+        JR      NZ, _CPDONE ; When MSBs are unequal
+        LD      A, C
+        CP      L        
+_CPDONE:
+        RET

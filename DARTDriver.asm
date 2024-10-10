@@ -10,10 +10,13 @@
 ;The addresses of the DART in I/O space.
 ;Change to suit hardware.
 
-DRTDA:  EQU     UART_BASE   ;   060h
-DRTDB:  EQU     DRTDA + 1
-DRTCA:  EQU     DRTDA + 2
-DRTCB:  EQU     DRTDA + 3
+;DRTDA:  EQU     UART_BASE   ;   060h
+;DRTDB:  EQU     UART_BASE + 1
+;DRTCA:  EQU     UART_BASE + 2
+;DRTCB:  EQU     UART_BASE + 3
+
+DRTDAT: EQU     UART_BASE
+DRTCTL: EQU     UART_BASE + 2
 
 ; useful patterns
 TXBUFEMPTY:  EQU     000000100b
@@ -24,22 +27,21 @@ XON:    EQU     015h
 
 ;***************************************************************************
 ;UART_INIT
-;Function: Initialize the UART to 1x BAUD Rate clock, 
+;Function: Initialize the UART to 16x BAUD Rate clock, 
 ; 8 bits, 1 stop bit, no parity, enable Tx and Rx
 ;***************************************************************************
 UART_INIT:
         LD      HL, DRTTB
-        LD      C, DRTCB
+        LD      C, DRTCTL
         LD      B, E_DRTTB - DRTTB
-        OTIR                    ; write 8 bytes from DRTTB to port DRTCB
+        OTIR                    ; write bytes from DRTTB to port DRTCB
         RET
 
 DRTTB:                      ; alternate register select and values (not for WR0)
         DEFB   00011000b    ; DRTWR0 - Register pointer & modes. Channel reset.
         DEFB   00000100b    ; DRTWR4 - Tx/Rx misc. params & modes
-;        DEFB   01000100b    ;  X16+STOP1+NOPARITY
-        DEFB   00000100b    ;   X1+STOP1+NOPARITY
-;        DEFB   00001100b    ;  X1+STOP2+NOPARITY:
+        DEFB   01000100b    ;  X16+STOP1+NOPARITY
+;       DEFB   00000100b    ;   X1+STOP1+NOPARITY
         DEFB   00000101b    ; DRTWR5 - Tx params & controls
         DEFB   01101000b    ;   TX8+TXEN
         DEFB   00000011b    ; DRTWR3 - Rx params & controls
@@ -69,7 +71,7 @@ UART_END_PRNT_STR:
 ;***************************************************************************
 UART_TX_RDY:
 WAITTXRDY:
-        IN      A, (DRTCB)		; 
+        IN      A, (DRTCTL)		; 
         AND     TXBUFEMPTY		; Can we send the next char?
         JR      Z, WAITTXRDY	; If not, wait
         RET
@@ -79,7 +81,7 @@ WAITTXRDY:
 ;Function: Transmit character in A to DART
 ;***************************************************************************
 TX_SEND:
-        OUT     (DRTDB), A		; Out it goes!
+        OUT     (DRTDAT), A		; Out it goes!
         RET
 
 ;***************************************************************************
@@ -108,7 +110,7 @@ RX_NOT_RDY:
 ; Function: Non-blocking receive check		
 ;***************************************************************************
 RX_CHK:
-        IN      A, (DRTCB)		; 
+        IN      A, (DRTCTL)		; 
         AND     RXCHARAVL		; Mask other bits, has some char arrived?
         RET
 
@@ -117,7 +119,6 @@ RX_CHK:
 ;Function: Receive character in UART to A; wait for char
 ;***************************************************************************
 UART_RX:
-        CALL    UART_RX_RDY		; Make sure UART is ready to receive
-        IN      A, (DRTDB)		; Get it
+        CALL    UART_RX_RDY		; Make sure UART has received a char
+        IN      A, (DRTDAT)		; Get it
         RET
-        

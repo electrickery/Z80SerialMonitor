@@ -263,7 +263,7 @@ PRINTHWORD:
 
 ;***************************************************************************
 ;CHAR TO NIBBLE
-;Transforms the HEX-character in A to a value fitting in a nibble
+;Transforms the HEX-character in A to a value fitting in the lower nibble
 ;***************************************************************************
 CHAR2NIB:
         SUB     '0'
@@ -308,3 +308,45 @@ P8B1:
 P8B_RET:        
         RET
         
+;TWO CHARS TO BYTE
+; convert the (hex) char at (HL) and the next to a byte in A. On exit
+; HL points to the next, ininterpreted character.
+CHARS2BYTE:
+        PUSH    BC
+        LD      A, (HL)
+        CALL    CHAR2NIB        ; get upper nibble from char
+        RLC     A
+        RLC     A
+        RLC     A
+        RLC     A
+        LD      B, A
+        INC     HL
+        LD      A, (HL)
+        CALL    CHAR2NIB        ; get lower nibble from char
+        OR      B
+        LD      A, B
+        POP     BC
+        INC     HL
+        RET
+
+;***************************************************************************
+; GETSIZE
+; Calculate the size, being End address - Start address
+; Start address in MVADDR + MVADDR+1, End address in MVADDR+2 + MVADDR+3
+; Size will be in MVADDR+4 + MVADDR+5
+;***************************************************************************
+;GETSIZE:
+;        LD      A, (MVADDR+2)   ; End LSB
+;        LD      HL, MVADDR+0    ; (Start LSB)
+;        SUB     (HL)
+;        PUSH    AF              ; keep Carry flag
+;        LD      (MVADDR+4), A   ; range LSB
+;        LD      A, (MVADDR+3)   ; End MSB
+;        LD      HL, MVADDR+1    ; (Start MSB)     
+;        SUB     (HL)
+;        LD      (MVADDR+5), A   ; range MSB
+;        POP     AF
+;        JR      NC, _MTNC
+;        DEC     (HL)            ; Correct MSB
+;_MTNC
+;        RET
