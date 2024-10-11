@@ -793,6 +793,7 @@ MTC_1: DEFB 0Dh, 0Ah, ' Phase 1: ??h to 00h ', EOS
 MTC_2: DEFB 0Dh, 0Ah, ' Phase 2: 00h to 55h ', EOS
 MTC_3: DEFB 0Dh, 0Ah, ' Phase 3: 55h to AAh ', EOS
 MTC_4: DEFB 0Dh, 0Ah, ' Phase 4: AAh to FFh ', EOS
+MTC_5: DEFB 0Dh, 0Ah, ' Memory OK', EOS
 MTCER1: DEFB 0Dh, 0Ah, '  Error at: ', EOS
 MTCER2: DEFB ' value expected: ', EOS
 MTCER3: DEFB ', found: ', EOS
@@ -824,22 +825,16 @@ MTEST:
 ; Phase 1   ; check only new value
         LD      HL, MTC_1
         CALL    PRINT_STRING
+        
         LD      HL, (MVADDR+0)
         LD      BC, (MVADDR+2)
+        LD      E, 64
         LD      D, 000h
-_MTLOOP1
-        ; new value write
-        LD      A, D
-        LD      (IX+5), A       ; expected value
-        LD      (HL), A
-        ; new value check
-        LD      A, (HL)
-        LD      (IX+4), A       ; store actual value
-        CP      (IX+5)          ; compare with expected
-        JR      NZ, _MTLPER2
-        CALL    CPADDR
-        INC     HL
-        JR      NZ, _MTLOOP1
+        LD      A, 1
+        LD      (MTPHFLAG), A
+        CALL    MCHECK
+        
+        JR      C, _MTDONE      ; skip other tests on error
         
 ; Phase 2   ; check old value and new value
         LD      HL, MTC_2
@@ -848,8 +843,12 @@ _MTLOOP1
         LD      HL, (MVADDR+0)  ; reset start address
         LD      E, 000h         ; old value
         LD      D, 055h         ; new value
+        LD      A, 2
+        LD      (MTPHFLAG), A
         CALL    MCHECK
 
+        JR      C, _MTDONE      ; skip other tests on error
+        
 ; Phase 3
         LD      HL, MTC_3
         CALL    PRINT_STRING
@@ -857,8 +856,12 @@ _MTLOOP1
         LD      HL, (MVADDR+0)  ; reset start address
         LD      E, 055h         ; old value
         LD      D, 0AAh         ; new value
+        LD      A, 3
+        LD      (MTPHFLAG), A
         CALL    MCHECK
 
+        JR      C, _MTDONE      ; skip other tests on error
+        
 ; Phase 4
         LD      HL, MTC_4
         CALL    PRINT_STRING
@@ -866,12 +869,22 @@ _MTLOOP1
         LD      HL, (MVADDR+0)  ; reset start address
         LD      E, 0AAh         ; old value
         LD      D, 0FFh         ; new value
+        LD      A, 4
+        LD      (MTPHFLAG), A
         CALL    MCHECK
         
-       RET
+        JR      C, _MTDONE      ; skip other tests on error
+        
+        LD      HL, MTC_5       ; Ok text
+        CALL    PRINT_STRING        
+_MTDONE
+        RET
 
 MCHECK
-_MTLOOP
+_MCLOOP
+        LD      A, (MTPHFLAG)
+        CP      1
+        JR      Z, _MCSKIPOLD   ; Skip old value check for phase 1
         ; old value check
         LD      A, E
         LD      (IX+5), A       ; store expected value
@@ -879,7 +892,7 @@ _MTLOOP
         LD      (IX+4), A       ; store actual value
         CP      (IX+5)          ; compare with expected
         JR      NZ, _MTLPER1    ; jump to error when unequal
-
+_MCSKIPOLD
         ; new value write
         LD      A, D
         LD      (HL), A         ; write new value
@@ -891,7 +904,9 @@ _MTLOOP
         JR      NZ, _MTLPER2    ; jump to error when unequal
         CALL    CPADDR          ; 
         INC     HL              ; 
-        JR      NZ, _MTLOOP     ; 
+        JR      NZ, _MCLOOP     ; 
+        AND     A               ; 'Clear Carry flag'
+        LD      A, 1
         JR      _MCDONE
 
 ; Error handling
@@ -922,7 +937,7 @@ _MTLPER:
         LD      A, (MVADDR+4)   ; actual value
         CALL    PRINTHBYTE
         CALL    PRINT_NEW_LINE
-        
+        SCF                     ; Flag the error for calling routine
 _MCDONE        
         RET
 

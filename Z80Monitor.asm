@@ -35,6 +35,7 @@ IECHECKSUM: EQU    RAM_BOTTOM + 1Bh        ; hex-intel record checksum
 IECADDR:    EQU    RAM_BOTTOM + 1Ch        ; hex-intel record address (2 bytes)
 IERECTYPE:  EQU    RAM_BOTTOM + 1Eh        ; hex-intel record type
 DEBUG:      EQU    RAM_BOTTOM + 1Fh
+MTPHFLAG    EQU    RAM_BOTTOM + 1Fh     ; Phase counter: phase 1 doesn't check old value (being unknown)
 RX_READ_P:  EQU    RAM_BOTTOM + 20h     ; read pointer
 RX_WRITE_P: EQU    RAM_BOTTOM + 22h     ; write pointer
 CHKSUM_C:   EQU    RAM_BOTTOM + 24h     ; uses 3 bytes
