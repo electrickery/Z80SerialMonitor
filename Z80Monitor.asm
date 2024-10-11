@@ -24,13 +24,13 @@ RAM_TOP:     EQU    RAM_BOTTOM + 0FFh		; Top address of RAM
 ;UART_BASE:  EQU     0E0h        ; Base port address, DART uses 4 ports
 
 MPFMON:     EQU    0000h
-ASCDMPBUF:  EQU    RAM_BOTTOM + 0h	    	;Buffer to construct ASCII part of memory dump
-ASCDMPEND:  EQU    RAM_BOTTOM + 10h		;End of buffer, fill with EOS
-DMPADDR:    EQU    RAM_BOTTOM + 11h		;Last dump address
-MVADDR:     EQU    RAM_BOTTOM + 12h 		; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
-ERRFLAG:    EQU    RAM_BOTTOM + 18h		; Location to store 
-MUTE:       EQU    RAM_BOTTOM + 19h		; 0 - print received chars, 1 - do not print received chars
-ULSIZE:     EQU    RAM_BOTTOM + 1Ah		; actual size of current/last hex-intel message
+ASCDMPBUF:  EQU    RAM_BOTTOM + 0h      ;Buffer to construct ASCII part of memory dump
+ASCDMPEND:  EQU    RAM_BOTTOM + 10h     ;End of buffer, fill with EOS
+DMPADDR:    EQU    RAM_BOTTOM + 11h     ;Last dump address
+MVADDR:     EQU    RAM_BOTTOM + 12h     ; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
+ERRFLAG:    EQU    RAM_BOTTOM + 18h     ; Location to store 
+MUTE:       EQU    RAM_BOTTOM + 19h     ; 0 - print received chars, 1 - do not print received chars
+ULSIZE:     EQU    RAM_BOTTOM + 1Ah     ; actual size of current/last hex-intel message
 IECHECKSUM: EQU    RAM_BOTTOM + 1Bh        ; hex-intel record checksum
 IECADDR:    EQU    RAM_BOTTOM + 1Ch        ; hex-intel record address (2 bytes)
 IERECTYPE:  EQU    RAM_BOTTOM + 1Eh        ; hex-intel record type
@@ -255,6 +255,6 @@ CLEAR_ERROR:
         INCLUDE	DARTDriver.asm
         INCLUDE	MONCommands.asm
         INCLUDE	CONIO.asm
-        INCLUDE CFDriver.asm
+;        INCLUDE CFDriver.asm
 
         END

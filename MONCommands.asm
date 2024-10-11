@@ -795,7 +795,7 @@ MTC_3: DEFB 0Dh, 0Ah, ' Phase 3: 55h to AAh ', EOS
 MTC_4: DEFB 0Dh, 0Ah, ' Phase 4: AAh to FFh ', EOS
 MTCER1: DEFB 0Dh, 0Ah, '  Error at: ', EOS
 MTCER2: DEFB ' value expected: ', EOS
-MTCER3: DEFB ' found: ', EOS
+MTCER3: DEFB ', found: ', EOS
 
 MTEST:
         ; Test strategy in four phases:
@@ -815,70 +815,130 @@ MTEST:
         ;    Check new value 
         ; Report start of each phase.
         ; Report address of first incorrect value and terminate
-
-; Phase 1
+        
+        ; MVADDR/MVADDR+1 : start address, MVADDR+2/MVADDR+3 : end address
+        ; MVADDR+4 : actual value, MVADDR+5 : expected value
+        ; D : new value, E : old value
+        
+        LD      IX, MVADDR
+; Phase 1   ; check only new value
         LD      HL, MTC_1
         CALL    PRINT_STRING
-        LD      D, 00h
-        LD      HL, (MVADDR)    ; Start address
-        LD      BC, (MVADDR+2)  ; End address
-_MTLOOP1:
-        LD      (HL), D
+        LD      HL, (MVADDR+0)
+        LD      BC, (MVADDR+2)
+        LD      D, 000h
+_MTLOOP1
+        ; new value write
+        LD      A, D
+        LD      (IX+5), A       ; expected value
+        LD      (HL), A
+        ; new value check
         LD      A, (HL)
-        CP      D
-        JR      NZ, _MTLPER1
+        LD      (IX+4), A       ; store actual value
+        CP      (IX+5)          ; compare with expected
+        JR      NZ, _MTLPER2
+        CALL    CPADDR
         INC     HL
-        CALL    CPADDR     
         JR      NZ, _MTLOOP1
-; Phase 2
+        
+; Phase 2   ; check old value and new value
         LD      HL, MTC_2
         CALL    PRINT_STRING
-        LD      E, D
-        LD      D, 055h
-        LD      HL, (MVADDR)    ; Start address
-        LD      BC, (MVADDR+2)  ; End address
-_MTLOOP2:
-        LD      A, (HL)
-        CP      E               ; old value compare
-        JR      NZ, _MTLPER1
-        LD      (HL), D
-        LD      A, (HL)
-        CP      D               ; new value compare
-        JR      NZ, _MTLPER1
-        INC     HL
-        CALL    CPADDR     
-        JR      NZ, _MTLOOP2
+
+        LD      HL, (MVADDR+0)  ; reset start address
+        LD      E, 000h         ; old value
+        LD      D, 055h         ; new value
+        CALL    MCHECK
 
 ; Phase 3
+        LD      HL, MTC_3
+        CALL    PRINT_STRING
+
+        LD      HL, (MVADDR+0)  ; reset start address
+        LD      E, 055h         ; old value
+        LD      D, 0AAh         ; new value
+        CALL    MCHECK
+
 ; Phase 4
+        LD      HL, MTC_4
+        CALL    PRINT_STRING
+
+        LD      HL, (MVADDR+0)  ; reset start address
+        LD      E, 0AAh         ; old value
+        LD      D, 0FFh         ; new value
+        CALL    MCHECK
+        
+       RET
+
+MCHECK
+_MTLOOP
+        ; old value check
+        LD      A, E
+        LD      (IX+5), A       ; store expected value
+        LD      A, (HL)         ; read mem
+        LD      (IX+4), A       ; store actual value
+        CP      (IX+5)          ; compare with expected
+        JR      NZ, _MTLPER1    ; jump to error when unequal
+
+        ; new value write
+        LD      A, D
+        LD      (HL), A         ; write new value
+        LD      (IX+5), A       ; store expected value
+        ; new value check
+        LD      A, (HL)         ; read new value
+        LD      (IX+4), A       ; store actual value
+        CP      (IX+5)          ; compare with expected
+        JR      NZ, _MTLPER2    ; jump to error when unequal
+        CALL    CPADDR          ; 
+        INC     HL              ; 
+        JR      NZ, _MTLOOP     ; 
+        JR      _MCDONE
 
 ; Error handling
-_MTLPER1:
-        LD      C, A
-        PUSH    HL
-        LD      HL, MTCER1  ; at
+_MTLPER1
+        PUSH    AF
+        LD      A, '<'
+        CALL    PRINT_CHAR
+        POP     AF
+        JR      _MTLPER
+_MTLPER2
+        PUSH    AF
+        LD      A, '>'
+        CALL    PRINT_CHAR
+        POP     AF
+
+_MTLPER:
+        PUSH    HL              ; keep actual location
+        LD      HL, MTCER1      ; at text
         CALL    PRINT_STRING
         POP     HL
         CALL    PRINTHWORD
-        LD      HL, MTCER2  ;   expected
+        LD      HL, MTCER2      ; expected text
         CALL    PRINT_STRING
-        LD      A, D
+        LD      A, (MVADDR+5)   ;   expected value
         CALL    PRINTHBYTE
-        LD      HL, MTCER3  ;   actual
+        LD      HL, MTCER3      ; actual found text
         CALL    PRINT_STRING
-        LD      A, C
+        LD      A, (MVADDR+4)   ; actual value
         CALL    PRINTHBYTE
         CALL    PRINT_NEW_LINE
+        
+_MCDONE        
         RET
 
+
 ; **********************************************************************
-;  CPADDR - Compare two addresses, Z-flag set when equal
+; CPADDR - Compare two addresses, Z-flag set when equal
+;  HL contains current address, BC contains end address
+;  Z-flag set when equal
 ; **********************************************************************
 CPADDR:
         LD      A, B        ; End MSB
-        CP      H           ; Start MSB :  B - H
+        CP      H           ; end MSB - current MSB : B - H
         JR      NZ, _CPDONE ; When MSBs are unequal
-        LD      A, C
-        CP      L        
+        LD      A, C        ; End LSB
+        CP      L           ; end LSB - current LSB ; C - L
+
 _CPDONE:
+        
         RET

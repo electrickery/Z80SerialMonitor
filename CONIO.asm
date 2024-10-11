@@ -9,7 +9,7 @@
 
 ;***************************************************************************
 ;PRINT_STRING
-;Function: Prints string to terminal program
+;Function: Prints string to terminal program. Start in HL
 ;***************************************************************************
 PRINT_STRING:
         CALL    UART_PRNT_STR
@@ -20,8 +20,8 @@ PRINT_STRING:
 ;Function: Get upper case ASCII character from user into Accumulator
 ;***************************************************************************
 GET_CHAR:
-        CALL	UART_RX				;Get char into Acc
-        CALL	TO_UPPER			;Character has to be upper case
+        CALL    UART_RX         ;Get char into Acc
+        CALL    TO_UPPER        ;Character has to be upper case
         RET
         
 ;***************************************************************************
@@ -29,20 +29,20 @@ GET_CHAR:
 ;Function: Get upper case ASCII character from Accumulator to UART
 ;***************************************************************************
 PRINT_CHAR:
-        CALL	UART_TX				;Echo character to terminal
-        RET			
+        CALL UART_TX    ;Echo character to terminal
+        RET
         
 ; Optional print char
 OPRINTCHAR:
-        LD		C, A
-        LD		A, (MUTE)
-        CP		MUTEON		; compare with 1=true
-        JR		Z, PRTSKIP
-        LD		A, C
-        CALL	PRINT_CHAR
+        LD      C, A
+        LD      A, (MUTE)
+        CP      MUTEON  ; compare with 1=true
+        JR      Z, PRTSKIP
+        LD      A, C
+        CALL    PRINT_CHAR
 
 PRTSKIP:
-        LD		A, C
+        LD      A, C
         RET
 
 ;***************************************************************************
@@ -50,27 +50,27 @@ PRTSKIP:
 ;Function: Convert character in Accumulator to upper case 
 ;***************************************************************************
 TO_UPPER:       
-        CP      'a'             	; Nothing to do if not lower case
+        CP      'a'     ; Nothing to do if not lower case
         RET     C
-        CP      'z' + 1         	; > 'z'?
-        RET     NC              	; Nothing to do, either
-        AND     5Fh             	; Convert to upper case
-        RET		
+        CP      'z' + 1 ; > 'z'?
+        RET     NC      ; Nothing to do, either
+        AND     5Fh     ; Convert to upper case
+        RET
             
 ;***************************************************************************
 ;MKPRINT
 ;Function: Make all characters printable by replacing control-chars with '.'
 ;***************************************************************************
-LOWPRTV:    EQU		' '
-HIGPRTV:    EQU		'~'
+LOWPRTV:    EQU         ' '
+HIGPRTV:    EQU         '~'
 MKPRINT:
-        CP		LOWPRTV
-        JR		C, ADDOT
-        CP		HIGPRTV
-        JR		NC, ADDOT
+        CP      LOWPRTV
+        JR      C, ADDOT
+        CP      HIGPRTV
+        JR      NC, ADDOT
         RET
 ADDOT:
-        LD		A, '.'
+        LD      A, '.'
         RET
         
 ;***************************************************************************
@@ -81,10 +81,10 @@ NEW_LINE_STRING:
         DEFB    0Dh, 0Ah ,EOS
 
 PRINT_NEW_LINE:
-        PUSH	HL
-        LD 		HL,NEW_LINE_STRING			
-        CALL    PRINT_STRING			
-        POP		HL
+        PUSH    HL
+        LD      HL,NEW_LINE_STRING
+        CALL    PRINT_STRING
+        POP     HL
         RET
         
 ;***************************************************************************
@@ -93,23 +93,23 @@ PRINT_NEW_LINE:
 ;***************************************************************************		
 CHAR_ISHEX:         
                                     ;Checks if Acc between '0' and 'F'
-        CP      'F' + 1       		;(Acc) > 'F'? 
-        RET     NC              	;Yes - Return / No - Continue
-        CP      '0'             	;(Acc) < '0'?
-        JP      NC,CIH1         	;Yes - Jump / No - Continue
-        CCF                     	;Complement carry (clear it)
+        CP      'F' + 1         ;(Acc) > 'F'? 
+        RET     NC              ;Yes - Return / No - Continue
+        CP      '0'             ;(Acc) < '0'?
+        JP      NC,CIH1         ;Yes - Jump / No - Continue
+        CCF                     ;Complement carry (clear it)
         RET
 CIH1:       
-                                    ;Checks if Acc below '9' and above 'A'
-        CP      '9' + 1         	;(Acc) < '9' + 1?
-        RET     C               	;Yes - Return / No - Continue (meaning Acc between '0' and '9')
-        CP      'A'             	;(Acc) > 'A'?
-        JP      NC,CIH2 	;Yes - Jump / No - Continue
-        CCF                     	;Complement carry (clear it)
+                                ;Checks if Acc below '9' and above 'A'
+        CP      '9' + 1         ;(Acc) < '9' + 1?
+        RET     C               ;Yes - Return / No - Continue (meaning Acc between '0' and '9')
+        CP      'A'             ;(Acc) > 'A'?
+        JP      NC,CIH2         ;Yes - Jump / No - Continue
+        CCF                     ;Complement carry (clear it)
         RET
 CIH2:        
-                                    ;Only gets here if Acc between 'A' and 'F'
-        SCF                     	;Set carry flag to indicate the char is a hex digit
+                                ;Only gets here if Acc between 'A' and 'F'
+        SCF                     ;Set carry flag to indicate the char is a hex digit
         RET
         
 ;***************************************************************************
@@ -118,20 +118,20 @@ CIH2:
 ;***************************************************************************
 GETHEXNIB:      
         CALL    GET_CHAR
-        CALL    CHAR_ISHEX      	; Is it a hex digit?
-        JP      NC,NONHEXNIB 	 	; Yes - Continue / No - Exit
+        CALL    CHAR_ISHEX      ; Is it a hex digit?
+        JP      NC,NONHEXNIB    ; Yes - Continue / No - Exit
         CALL    OPRINTCHAR
 
-        CP      '9' + 1         	; Is it a digit less or equal '9' + 1?
-        JP      C,IS_NUM 			; Yes - Jump / No - Continue
-        SUB     07h             	; Adjust for A-F digits
+        CP      '9' + 1         ; Is it a digit less or equal '9' + 1?
+        JP      C,IS_NUM        ; Yes - Jump / No - Continue
+        SUB     07h             ; Adjust for A-F digits
 IS_NUM:                
-        SUB     '0'             	; Subtract to get nib between 0->15
-        AND     0Fh             	; Only return lower 4 bits
+        SUB     '0'             ; Subtract to get nib between 0->15
+        AND     0Fh             ; Only return lower 4 bits
         RET
-NONHEXNIB:                              ; Allow exit on wrong char
+NONHEXNIB:                      ; Allow exit on wrong char
         LD      A, E_NOHEX
-        LD      (ERRFLAG), A	; Error flag
+        LD      (ERRFLAG), A    ; Error flag
         RET
 
 ;***************************************************************************
@@ -221,10 +221,10 @@ SHFTNIB:
 ;Function: Prints a low nibble in hex notation from Acc to the serial line.
 ;***************************************************************************
 PRINTHNIB:
-        PUSH 	AF
-        CALL	NIB2CHAR
-        CALL	PRINT_CHAR        	;Print the nibble
-        POP		AF
+        PUSH    AF
+        CALL    NIB2CHAR
+        CALL    PRINT_CHAR        	;Print the nibble
+        POP     AF
         RET
         
 ;***************************************************************************
@@ -232,18 +232,18 @@ PRINTHNIB:
 ;Function: Prints a byte in hex notation from Acc to the serial line.
 ;***************************************************************************		
 PRINTHBYTE:
-        PUSH	AF					;Save registers
-        PUSH	DE
-        LD		D,A					;Save for low nibble
-        RRCA						;Rotate high nibble into low nibble
+        PUSH    AF      ;Save registers
+        PUSH    DE
+        LD      D,A     ;Save for low nibble
+        RRCA            ;Rotate high nibble into low nibble
         RRCA
         RRCA
         RRCA
-        CALL    PRINTHNIB		;Print high nibble
-        LD		A,D					;Restore for low nibble
-        CALL    PRINTHNIB		;Print low nibble
-        POP		DE
-        POP		AF
+        CALL    PRINTHNIB       ;Print high nibble
+        LD      A,D             ;Restore for low nibble
+        CALL    PRINTHNIB       ;Print low nibble
+        POP     DE
+        POP     AF
         RET
         
 ;***************************************************************************
@@ -251,15 +251,15 @@ PRINTHBYTE:
 ;Function: Prints the four hex digits of a word to the serial line from HL
 ;***************************************************************************
 PRINTHWORD:     
-;		PUSH 	HL
-        PUSH	AF
-        LD		A,H
-        CALL	PRINTHBYTE		;Print high byte
-        LD		A,L
-        CALL    PRINTHBYTE		;Print low byte
-        POP		AF
-;		POP		HL
-        RET			
+;       PUSH    HL
+        PUSH    AF
+        LD      A,H
+        CALL    PRINTHBYTE      ;Print high byte
+        LD      A,L
+        CALL    PRINTHBYTE      ;Print low byte
+        POP     AF
+;       POP     HL
+        RET
 
 ;***************************************************************************
 ;CHAR TO NIBBLE
