@@ -19,7 +19,7 @@ SCAN        EQU     005FEh
 ROM_TOP:     EQU    ROM_BOTTOM + 00FFFh		; Top address of ROM
 
 ;RAM_BOTTOM:  EQU    01800h		; Bottom address of RAM
-RAM_TOP:     EQU    RAM_BOTTOM + 0FFh		; Top address of RAM	
+RAM_TOP:     EQU    RAM_BOTTOM + 1FFh		; Top address of RAM	
 
 ;UART_BASE:  EQU     0E0h        ; Base port address, DART uses 4 ports
 
