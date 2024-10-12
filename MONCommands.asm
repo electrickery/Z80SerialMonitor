@@ -25,6 +25,7 @@ HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGo: DEFB 'O - write byte to output port', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
 HLPMSGr: DEFB 'R - monitor reset', 0Dh, 0Ah, EOS
+HLPMSGq: DEFB 'Q - test MPF keyboard', 0Dh, 0Ah, EOS
 HLPMSGs: DEFB 'S - calculate checksum for memory range', 0Dh, 0Ah, EOS
 HLPMSGt: DEFB 'T - test memory range', 0Dh, 0Ah, EOS
 HLPMSGz: DEFB 'Z - dump user registers (STEP)', 0Dh, 0Ah, EOS
@@ -53,6 +54,8 @@ HELP_COMMAND:
         LD      HL, HLPMSGo
         CALL    PRINT_STRING
         LD      HL, HLPMSGp
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGq
         CALL    PRINT_STRING
         LD      HL, HLPMSGr
         CALL    PRINT_STRING

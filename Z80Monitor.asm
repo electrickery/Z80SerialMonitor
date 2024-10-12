@@ -188,6 +188,8 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         CALL    Z,PW_COMMAND
         CP      'P'
         CALL    Z,PSCOMMAND
+        CP      'Q'
+        CALL    Z,UTERMTST
         CP      'R'
         CALL    Z,RESET_COMMAND
         CP      'M'
@@ -221,13 +223,18 @@ UTERMTST:
         LD      IX, SCTXT
         CALL    SCAN
         CP      010h    ; A - 010h
-        JP      C, _UTHEX
-        JP      UTERMTST
+        JR      C, _UTHEX
+        CALL    PRINTHBYTE
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        JR      UTERMTST
         
 _UTHEX
         CALL    NIB2CHAR
         CALL    PRINT_CHAR
-        JP      UTERMTST
+        LD      A, ' '
+        CALL    PRINT_CHAR
+        JR      UTERMTST
         
 ;               dpcbafge     ; 7-segment pattern to bit  map
 SCTXT   DB      10000111b    ; t
