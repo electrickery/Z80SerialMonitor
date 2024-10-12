@@ -218,8 +218,10 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         RET
         
 UTERMTST:
-                ; micro terminal: scans MPF keyboard and sends ASCII 
-                ; '0'-'F' for the hex keys.
+                        ; micro terminal: scans MPF keyboard and sends ASCII 
+                        ; '0'-'F' for the hex keys and '10-1F' for other keys.
+        CALL    RX_CHK
+        RET     NZ      ; Return on serial received char
         LD      IX, SCTXT
         CALL    SCAN
         CP      010h    ; A - 010h

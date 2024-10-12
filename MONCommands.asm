@@ -792,17 +792,17 @@ _TC_NEGL:
 _TC_DONE:        
         RET
         
-MTC_1: DEFB 0Dh, 0Ah, ' Phase 1: ??h to 00h ', EOS
-MTC_2: DEFB 0Dh, 0Ah, ' Phase 2: 00h to 55h ', EOS
-MTC_3: DEFB 0Dh, 0Ah, ' Phase 3: 55h to AAh ', EOS
-MTC_4: DEFB 0Dh, 0Ah, ' Phase 4: AAh to FFh ', EOS
+MTC_1: DEFB 0Dh, 0Ah, ' Pass 1: ??h to 00h ', EOS
+MTC_2: DEFB 0Dh, 0Ah, ' Pass 2: 00h to 55h ', EOS
+MTC_3: DEFB 0Dh, 0Ah, ' Pass 3: 55h to AAh ', EOS
+MTC_4: DEFB 0Dh, 0Ah, ' Pass 4: AAh to FFh ', EOS
 MTC_5: DEFB 0Dh, 0Ah, ' Memory OK', EOS
-MTCER1: DEFB 0Dh, 0Ah, '  Error at: ', EOS
+MTCER1: DEFB ' Error at: ', EOS
 MTCER2: DEFB ' value expected: ', EOS
 MTCER3: DEFB ', found: ', EOS
 
 MTEST:
-        ; Test strategy in four phases:
+        ; Test strategy in four passes:
         ; 1. Loop through start to end and for each memory location:
         ;    Set to 00h and check new value
         ; 2. Loop through start to end and for each memory location:
@@ -817,7 +817,7 @@ MTEST:
         ;   Check old value (AAh)
         ;    Set new value FFh
         ;    Check new value 
-        ; Report start of each phase.
+        ; Report start of each pass.
         ; Report address of first incorrect value and terminate
         
         ; MVADDR/MVADDR+1 : start address, MVADDR+2/MVADDR+3 : end address
@@ -825,7 +825,7 @@ MTEST:
         ; D : new value, E : old value
         
         LD      IX, MVADDR
-; Phase 1   ; check only new value
+; Pass 1   ; check only new value (write phase)
         LD      HL, MTC_1
         CALL    PRINT_STRING
         
@@ -839,7 +839,7 @@ MTEST:
         
         JR      C, _MTDONE      ; skip other tests on error
         
-; Phase 2   ; check old value and new value
+; Pass 2   ; check old value and new value (read & write phase)
         LD      HL, MTC_2
         CALL    PRINT_STRING
 
@@ -852,7 +852,7 @@ MTEST:
 
         JR      C, _MTDONE      ; skip other tests on error
         
-; Phase 3
+; Pass 3
         LD      HL, MTC_3
         CALL    PRINT_STRING
 
@@ -865,7 +865,7 @@ MTEST:
 
         JR      C, _MTDONE      ; skip other tests on error
         
-; Phase 4
+; Pass 4
         LD      HL, MTC_4
         CALL    PRINT_STRING
 
@@ -887,7 +887,7 @@ MCHECK
 _MCLOOP
         LD      A, (MTPHFLAG)
         CP      1
-        JR      Z, _MCSKIPOLD   ; Skip old value check for phase 1
+        JR      Z, _MCSKIPOLD   ; Skip old value check for pass 1
         ; old value check
         LD      A, E
         LD      (IX+5), A       ; store expected value
@@ -915,13 +915,19 @@ _MCSKIPOLD
 ; Error handling
 _MTLPER1
         PUSH    AF
-        LD      A, '<'
+        CALL    PRINT_NEW_LINE
+        LD      A, '1'
+        CALL    PRINT_CHAR
+        LD      A, '.'
         CALL    PRINT_CHAR
         POP     AF
         JR      _MTLPER
 _MTLPER2
         PUSH    AF
-        LD      A, '>'
+        CALL    PRINT_NEW_LINE
+        LD      A, '2'
+        CALL    PRINT_CHAR
+        LD      A, '.'
         CALL    PRINT_CHAR
         POP     AF
 
@@ -933,7 +939,7 @@ _MTLPER:
         CALL    PRINTHWORD
         LD      HL, MTCER2      ; expected text
         CALL    PRINT_STRING
-        LD      A, (MVADDR+5)   ;   expected value
+        LD      A, (MVADDR+5)   ; expected value
         CALL    PRINTHBYTE
         LD      HL, MTCER3      ; actual found text
         CALL    PRINT_STRING
@@ -943,7 +949,6 @@ _MTLPER:
         SCF                     ; Flag the error for calling routine
 _MCDONE        
         RET
-
 
 ; **********************************************************************
 ; CPADDR - Compare two addresses, Z-flag set when equal
