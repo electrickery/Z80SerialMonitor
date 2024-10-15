@@ -19,8 +19,8 @@ HLPMSGc: DEFB 'C - clear screen', 0Dh, 0Ah, EOS
 HLPMSGd: DEFB 'D - print 100h bytes from specified location', 0Dh, 0Ah, EOS
 HLPMSGe: DEFB 'E - edit bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGf: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
-HLPMSGg: DEFB 'G - jump to memory value', 0Dh, 0Ah, EOS
-HLPMSGk: DEFB 'K - call to memory value', 0Dh, 0Ah, EOS
+HLPMSGg: DEFB 'G - jump to memory address', 0Dh, 0Ah, EOS
+HLPMSGk: DEFB 'K - call to memory address', 0Dh, 0Ah, EOS
 HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGo: DEFB 'O - write byte to output port', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
