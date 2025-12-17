@@ -3,7 +3,7 @@
 This is a learning project for getting a serial monitor working on a modified Multitech MPF-1 Single Board Computer
 based on the Z80 microprocessor. 
 
-![Development setup including MPF-1B with Z80 DART modification, ROMEmu in U7 ROM socket, pl2303 serial-USB converter.](MPF1DevSetup.jpg)
+![Development setup including MPF-1B with Z80 DART modification, ROMEmu in U7 ROM socket, pl2303 serial-USB converter.](MPF1+SerialMemDevSetup.jpg)
 
 The ![MPF-1(B)](http://electrickery.connected.by.freedominter.net/comp/mpf1/) is a single board computer designed 
 and build in the early 1980's for computer education. It is a Z80 based board with the traditional 7-segment 
