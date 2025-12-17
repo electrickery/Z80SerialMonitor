@@ -42,14 +42,15 @@
 ; Last author: fjkraan@electrickery.nl, 2025-12-16
 ;---------------------------------------------------------------------
 
+;        ORG     2000h   ;       temporary ORG for standalone mode testing
 ;---------------------------------------------------------------------
 ; Constants
 ;---------------------------------------------------------------------
-;EOS             equ     00h
-;CR		equ	0dh
-;LF		equ	0ah
+EOS             equ     00h
+CR		equ	0dh
+LF		equ	0ah
 SPACE		equ	20h
-;ESC		equ	1bh
+ESC		equ	1bh
 
 ;L_ROM   EQU     0E000h
 
@@ -176,56 +177,6 @@ CRLF	ld	a,CR
 	ret
 
 ;---------------------------------------------------------------------
-; Get a byte in hexadecimal notation. The result is returned in A. Since
-; the routine get_nibble is used only valid characters are accepted - the 
-; input routine only accepts characters 0-9a-f.
-;---------------------------------------------------------------------
-GET_BYTE:
-	push	bc			; Save contents of B (and C)
-	call	GET_NIBBLE		; Get upper nibble
-	rlc	a
-	rlc	a
-	rlc	a
-	rlc	a
-	ld	b,a			; Save upper four bits
-	call	GET_NIBBLE		; Get lower nibble
-	or	b			; Combine both nibbles
-	pop	bc			; Restore B (and C)
-
-	ret
-
-;---------------------------------------------------------------------
-; Get a hexadecimal digit from the serial line. This routine blocks until
-; a valid character (0-9a-f) has been entered. A valid digit will be echoed
-; to the serial line interface. The lower 4 bits of A contain the value	of 
-; that particular digit.
-;---------------------------------------------------------------------
-GET_NIBBLE:
-	call	SER_RX_CHAR		; Read a character
-	call	TO_UPPER		; Convert to upper case
-	call	IS_HEX			; Was it a hex digit?
-	jr	nc,GET_NIBBLE		; No, get another character
-	call	NIBBLE2VAL		; Convert nibble to value
-	call	PRINT_NIBBLE
-
-	ret
-
-;---------------------------------------------------------------------
-; Get a word (16 bit) in hexadecimal notation. The result is returned in HL.
-; Since the routines get_byte and therefore get_nibble are called, only valid
-; characters (0-9a-f) are accepted.
-;---------------------------------------------------------------------
-GET_WORD:
-	push	af
-	call	GET_BYTE		; Get the upper byte
-	ld	h,a
-	call	GET_BYTE		; Get the lower byte
-	ld	l,a
-	pop	af
-
-	ret
-
-;---------------------------------------------------------------------
 ; is_hex checks a character stored in A for being a valid hexadecimal digit.
 ; A valid hexadecimal digit is denoted by a set C flag.
 ;---------------------------------------------------------------------
@@ -267,28 +218,6 @@ _NIBBLE2VAL:
 
 	ret
 
-;---------------------------------------------------------------------
-; print_nibble prints a single hex nibble which is contained in the lower 
-; four bits of A:
-;---------------------------------------------------------------------
-PRINT_NIBBLE:	
-	push	af			; We won't destroy the contents of A
-	and	0fh			; Just in case...
-	add	a,'0'			; If we have a digit we are done here.
-	cp	'9' + 1			; Is the result > 9?
-	jr	c, _PRNIB
-	add	a, 8		; Take care of A-F
-
-_PRNIB:
-	call	SER_TX_CHAR		; Print the nibble and
-	pop	af			; restore the original value of A
-
-	ret
-
-        
-SER_RTS_LOW:
-                RET
-
 ; ----------------------------------------------------------------------------
 ; INCLUDE libraries
 ; ----------------------------------------------------------------------------
@@ -299,6 +228,11 @@ SER_RTS_LOW:
 SER_RX_CHAR     EQU     UART_RX
 SER_TX_CHAR     EQU     UART_TX
 SER_TX_STRING   EQU     PRINT_STRING
+PRINT_NIBBLE    EQU     PRINTHNIB
+GET_WORD        EQU     GETHEXWORD
+GET_NIBBLE      EQU     GETHEXNIB
+GET_BYTE        EQU     GETHEXBYTE
+
 ;     EQU     
 
 ;---------------------------------------------------------------------
