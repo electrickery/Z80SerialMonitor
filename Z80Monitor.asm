@@ -8,7 +8,7 @@
 ;***************************************************************************
 
 VERSMYR:    EQU     '1'
-VERSMIN:    EQU     '0'
+VERSMIN:    EQU     '1'
 
             INCLUDE CONSTANTS.asm ; copy or edit one of the 
                                   ; CONSTANTS-aaaa-pp.asm files to
@@ -206,7 +206,7 @@ MON_COMMAND:    ; Inserted ERROR_CHK for all commands requiring input
         CALL    Z,PREVP_COMMAND
         CP      'E'
         CALL    Z,EDIT_COMMAND
-        CP      ':'
+        CP      'L'
         CALL    Z,HEXI_COMMAND
         CP      'S'
         CALL    Z,CCKSM_COMMAND
@@ -265,6 +265,7 @@ CLEAR_ERROR:
         INCLUDE	DARTDriver.asm
         INCLUDE	MONCommands.asm
         INCLUDE	CONIO.asm
+        INCLUDE hex-load-dart.asm
 ;        INCLUDE CFDriver.asm
 
         END

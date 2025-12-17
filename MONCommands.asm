@@ -21,6 +21,7 @@ HLPMSGe: DEFB 'E - edit bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGf: DEFB 'F - fill memory range with value', 0Dh, 0Ah, EOS
 HLPMSGg: DEFB 'G - jump to memory address', 0Dh, 0Ah, EOS
 HLPMSGk: DEFB 'K - call to memory address', 0Dh, 0Ah, EOS
+HLPMSGl: DEFB 'L - load intel-hex file', 0Dh, 0Ah, EOS
 HLPMSGm: DEFB 'M - copy bytes in memory', 0Dh, 0Ah, EOS
 HLPMSGo: DEFB 'O - write byte to output port', 0Dh, 0Ah, EOS
 HLPMSGp: DEFB 'P - print port scan (00-FF)', 0Dh, 0Ah, EOS
@@ -48,6 +49,8 @@ HELP_COMMAND:
         LD      HL, HLPMSGg
         CALL    PRINT_STRING
         LD      HL, HLPMSGk
+        CALL    PRINT_STRING
+        LD      HL, HLPMSGl
         CALL    PRINT_STRING
         LD      HL, HLPMSGm
         CALL    PRINT_STRING
@@ -556,77 +559,8 @@ CCSM_4:                     ; running address matches end, done
 
         RET
 
-;***************************************************************************
-; Load hex-intel record
-;
-;***************************************************************************
-
-HEXI_COMMAND:
-        
-; :0C 2000 00  C31820C39421C3B62AC3812A 50
-;  sz addr typ data                     chk
-
-; This part reads the record into the buffer. 
-; Note the ':' is already eaten by the command interpreter.
-HEXI_COMMAND:
-        LD      A, 1
-        LD      (MUTE), A
-        LD      HL, UPLOADBUF
-        LD      (RX_READ_P), HL
-        LD      (RX_WRITE_P), HL
-HXI_LOOP:
-        CALL    UART_RX_RDY
-        CALL    UART_RX
-        LD      HL, (RX_WRITE_P)
-        LD      (HL), A
-        INC     HL
-        LD      (RX_WRITE_P), HL
-        AND     A
-        CP      LF
-        JR      Z, HXI_RCVD
-        JR      HXI_LOOP
-        
-HXI_RCVD:                               ; the record is received, echo the start address
-        LD      A, 0
-        LD      (MUTE), A
-        
-        LD      HL, UPLOADBUF + 2       ; Point to the first address char.
-        LD      B, 4
-HXIADRLP:
-        LD      A, (HL)
-        CALL    PRINT_CHAR
-        INC     HL
-        DJNZ    HXIADRLP
-        
-        LD      A, (HL)
-        CALL    PRINT_CHAR
-        CALL    PRINT_NEW_LINE
-        
-HXI_PROC:                               ; processing the record
-        LD      HL, UPLOADBUF
-        CALL    CHARS2BYTE              ; get record size
-        LD      (ULSIZE), A             ; store it
-        CALL    CHARS2BYTE              ; get record address, MSB
-        LD      (IECADDR+1), A          ; 
-        CALL    CHARS2BYTE              ; get record address, LSB
-        LD      (IECADDR), A 
-        CALL    CHARS2BYTE              ; get record type
-        LD      (IERECTYPE), A
-        CP      00h                     ; compare to end record
-        JR      Z, HXI_ENDR
-        LD      A, (ULSIZE)
-        LD      B, A                    ; set up DJNZ loop
-        LD      DE, (IECADDR)
-HXD_LOOP:
-        CALL    CHARS2BYTE              ; get data byte
-        LD      (DE), A                 ; store it at target location
-        INC     DE
-        DJNZ    HXD_LOOP                ; repeat for all data bytes
-        CALL    CHARS2BYTE              ; Get checksum
-
-HXI_ENDR:                               ; Done
-        RET
-        
+; Register dump
+       
 USERAF: EQU     01FBCh
 USERBC: EQU     01FBEh
 USERDE: EQU     01FC0h
