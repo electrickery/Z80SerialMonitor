@@ -76,6 +76,8 @@ Usage:
 The second argument of the script compensates for the target address in the hex intel file with respect to 
 the address in the RAM. 
 
+With version 1.1 the serial monitor has its own hex-intel upload code. Working, bit still experimental...
+
 ## Some screenshots
 
 Startup banner and help:
@@ -88,4 +90,4 @@ Changes made to the dump command:
 
 A planned change is to add a download of hex-intel via the monitor too, making a comparison on the host possible.
 
-fjkraan@electrickery.nl, 20220216
+fjkraan@electrickery.nl, 20251217
