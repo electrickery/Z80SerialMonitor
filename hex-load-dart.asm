@@ -130,9 +130,9 @@ LOAD_EOL:
 	ld	a,e
 	and	a			; Is the checksum zero (as expected)?
 	jr	nz,_LCHK_E
-	call	CRLF
-;        ld	hl, MSG_LNOK
-;        call	SER_TX_STRING
+;	call	CRLF
+        ld	hl, MSG_LNOK
+        call	SER_TX_STRING
 	jr	LOAD_LOOP		; Yes - read next line
 
 _LOAD_ERR:

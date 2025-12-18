@@ -7,16 +7,8 @@
 ;  CREATE DATE :	2020-12-25
 ;***************************************************************************
 
-;The addresses of the DART in I/O space.
-;Change to suit hardware.
-
-;DRTDA:  EQU     UART_BASE   ;   060h
-;DRTDB:  EQU     UART_BASE + 1
-;DRTCA:  EQU     UART_BASE + 2
-;DRTCB:  EQU     UART_BASE + 3
-
-DRTDAT: EQU     UART_BASE
-DRTCTL: EQU     UART_BASE + 2
+; The addresses of the DART in I/O space.
+; Change to suit hardware in CONSTANTS.asm.
 
 ; useful patterns
 TXBUFEMPTY:  EQU     000000100b
@@ -32,9 +24,13 @@ XON:    EQU     015h
 ;***************************************************************************
 UART_INIT:
         LD      HL, DRTTB
-        LD      C, DRTCTL
+        LD      C, UART_1CTL
         LD      B, E_DRTTB - DRTTB
-        OTIR                    ; write bytes from DRTTB to port DRTCB
+        OTIR                    ; write bytes from DRTTB to port DRTCTL
+;        LD      HL, DRTTB
+;        LD      C, UART_2CTL
+;        LD      B, E_DRTTB - DRTTB
+;        OTIR                    ; write bytes from DRTTB to port DRT2CTL      
         RET
 
 DRTTB:                      ; alternate register select and values (not for WR0)
@@ -56,11 +52,11 @@ UART_PRNT_STR:
         PUSH    AF
 UARTPRNTSTRLP:
         LD      A,(HL)
-        CP      EOS					;Test for end byte
-        JP      Z,UART_END_PRNT_STR	;Jump if end byte is found
+        CP      EOS                     ; Test for end byte
+        JP      Z,UART_END_PRNT_STR     ; Jump if end byte is found
         CALL    UART_TX
-        INC     HL					;Increment pointer to next char
-        JP      UARTPRNTSTRLP	    ;Transmit loop
+        INC     HL                      ; Increment pointer to next char
+        JP      UARTPRNTSTRLP           ; Transmit loop
 UART_END_PRNT_STR:
         POP     AF
         RET
@@ -71,9 +67,12 @@ UART_END_PRNT_STR:
 ;***************************************************************************
 UART_TX_RDY:
 WAITTXRDY:
-        IN      A, (DRTCTL)		; 
-        AND     TXBUFEMPTY		; Can we send the next char?
-        JR      Z, WAITTXRDY	; If not, wait
+        IN      A, (UART_1CTL)  ; 
+;        LD      A,(UART1CTLP)
+;        LD      C, A
+;        IN      A, (C)         ; 
+        AND     TXBUFEMPTY      ; Can we send the next char?
+        JR      Z, WAITTXRDY    ; If not, wait
         RET
 
 ;***************************************************************************
@@ -81,7 +80,12 @@ WAITTXRDY:
 ;Function: Transmit character in A to DART
 ;***************************************************************************
 TX_SEND:
-        OUT     (DRTDAT), A		; Out it goes!
+        OUT     (UART_1DAT), A    ; Out it goes!
+;        PUSH    AF
+;        LD      A,(UART1DATP)
+;        LD      C, A
+;        POP     AF
+;        OUT     (C), A     ; Out it goes!
         RET
 
 ;***************************************************************************
@@ -102,16 +106,19 @@ UART_TX:
 UART_RX_RDY:
 RX_NOT_RDY:
         CALL    RX_CHK
-        JR      Z, RX_NOT_RDY		; If rx_ready_bit zero, wait
+        JR      Z, RX_NOT_RDY   ; If rx_ready_bit zero, wait
         RET
 
 ;***************************************************************************
 ; DART_RX_CHK
-; Function: Non-blocking receive check		
+; Function: Non-blocking receive check
 ;***************************************************************************
 RX_CHK:
-        IN      A, (DRTCTL)		; 
-        AND     RXCHARAVL		; Mask other bits, has some char arrived?
+        IN      A, (UART_1CTL)     ; 
+;        LD      A,(UART1CTLP)
+;        LD      C, A
+;        IN      A, (C)          ; 
+        AND     RXCHARAVL       ; Mask other bits, has some char arrived?
         RET
 
 ;***************************************************************************
@@ -119,6 +126,9 @@ RX_CHK:
 ;Function: Receive character in UART to A; wait for char
 ;***************************************************************************
 UART_RX:
-        CALL    UART_RX_RDY		; Make sure UART has received a char
-        IN      A, (DRTDAT)		; Get it
+        CALL    UART_RX_RDY     ; Make sure UART has received a char
+        IN      A, (UART_1DAT)		; Get it
+;        LD      A,(UART1DATP)
+;        LD      C, A
+;        IN      A, (C)          ; Get it
         RET

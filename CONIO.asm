@@ -29,14 +29,14 @@ GET_CHAR:
 ;Function: Get upper case ASCII character from Accumulator to UART
 ;***************************************************************************
 PRINT_CHAR:
-        CALL UART_TX    ;Echo character to terminal
+        CALL UART_TX            ; Echo character to terminal
         RET
         
 ; Optional print char
 OPRINTCHAR:
         LD      C, A
         LD      A, (MUTE)
-        CP      MUTEON  ; compare with 1=true
+        CP      MUTEON          ; compare with 1=true
         JR      Z, PRTSKIP
         LD      A, C
         CALL    PRINT_CHAR
@@ -92,24 +92,24 @@ PRINT_NEW_LINE:
 ;Function: Checks if value in A is a hexadecimal digit, C flag set if true
 ;***************************************************************************		
 CHAR_ISHEX:         
-                                    ;Checks if Acc between '0' and 'F'
-        CP      'F' + 1         ;(Acc) > 'F'? 
-        RET     NC              ;Yes - Return / No - Continue
-        CP      '0'             ;(Acc) < '0'?
-        JP      NC,CIH1         ;Yes - Jump / No - Continue
-        CCF                     ;Complement carry (clear it)
+                                ; Checks if Acc between '0' and 'F'
+        CP      'F' + 1         ; (Acc) > 'F'? 
+        RET     NC              ; Yes - Return / No - Continue
+        CP      '0'             ; (Acc) < '0'?
+        JP      NC,CIH1         ; Yes - Jump / No - Continue
+        CCF                     ; Complement carry (clear it)
         RET
 CIH1:       
-                                ;Checks if Acc below '9' and above 'A'
-        CP      '9' + 1         ;(Acc) < '9' + 1?
-        RET     C               ;Yes - Return / No - Continue (meaning Acc between '0' and '9')
-        CP      'A'             ;(Acc) > 'A'?
-        JP      NC,CIH2         ;Yes - Jump / No - Continue
-        CCF                     ;Complement carry (clear it)
+                                ; Checks if Acc below '9' and above 'A'
+        CP      '9' + 1         ; (Acc) < '9' + 1?
+        RET     C               ; Yes - Return / No - Continue (meaning Acc between '0' and '9')
+        CP      'A'             ; (Acc) > 'A'?
+        JP      NC,CIH2         ; Yes - Jump / No - Continue
+        CCF                     ; Complement carry (clear it)
         RET
 CIH2:        
-                                ;Only gets here if Acc between 'A' and 'F'
-        SCF                     ;Set carry flag to indicate the char is a hex digit
+                                ; Only gets here if Acc between 'A' and 'F'
+        SCF                     ; Set carry flag to indicate the char is a hex digit
         RET
         
 ;***************************************************************************
@@ -141,29 +141,29 @@ NONHEXNIB:                      ; Allow exit on wrong char
 ;***************************************************************************
 GETHEXBYTE:
         CALL    GETHEXNIB       ; Get high nibble
-        PUSH	DE
-        PUSH	AF
-        LD	A, (ERRFLAG)
-        CP	E_NONE
-        JR	NZ, GHB_ERR
-        POP	AF
+        PUSH    DE
+        PUSH    AF
+        LD      A, (ERRFLAG)
+        CP      E_NONE
+        JR      NZ, GHB_ERR
+        POP     AF
         RLC     A               ; Rotate nibble into high nibble
         RLC     A
         RLC     A
         RLC     A
         LD      D,A             ; Save upper four bits
         CALL    GETHEXNIB       ; Get lower nibble
-        PUSH	AF
-        LD	A, (ERRFLAG)
-        CP	E_NONE
-        JR	NZ, GHB_ERR  
-        POP	AF          
+        PUSH    AF
+        LD      A, (ERRFLAG)
+        CP      E_NONE
+        JR      NZ, GHB_ERR  
+        POP     AF          
         OR      D               ; Combine both nibbles
-        POP	DE
+        POP     DE
         RET
 GHB_ERR:
-        POP	AF
-        POP	DE
+        POP     AF
+        POP     DE
         RET
 
 ;***************************************************************************
@@ -172,23 +172,23 @@ GHB_ERR:
 ;Uses: AF
 ;***************************************************************************
 GETHEXWORD:
-        CALL    GETHEXBYTE	;Get high byte
-        PUSH	AF
-        LD		A, (ERRFLAG)
-        CP		E_NONE
-        JR		NZ, GHW_ERR
-        POP		AF
-        LD		H,A
-        CALL    GETHEXBYTE    	;Get low byte
-        PUSH	AF
-        LD		A, (ERRFLAG)
-        CP		E_NONE
-        JR		NZ, GHW_ERR
+        CALL    GETHEXBYTE      ; Get high byte
+        PUSH    AF
+        LD      A, (ERRFLAG)
+        CP      E_NONE
+        JR      NZ, GHW_ERR
+        POP     AF
+        LD      H,A
+        CALL    GETHEXBYTE      ; Get low byte
+        PUSH    AF
+        LD      A, (ERRFLAG)
+        CP      E_NONE
+        JR      NZ, GHW_ERR
         POP     AF
         LD      L,A
         RET
 GHW_ERR:
-        POP		AF
+        POP     AF
         RET
         
 ;***************************************************************************
@@ -196,11 +196,11 @@ GHW_ERR:
 ;Function: Converts the lower nibble in A into a HEX character
 ;***************************************************************************
 NIB2CHAR:
-        AND     0Fh             	;Only low nibble in byte
-        ADD     A,'0'             	;Adjust for char offset
-        CP      '9' + 1         	;Is the hex digit > 9?
-        JR      C,N2C1				;Yes - Jump / No - Continue
-        ADD     A,'A' - '0' - 0Ah 	;Adjust for A-F
+        AND     0Fh                 ; Only low nibble in byte
+        ADD     A,'0'               ; Adjust for char offset
+        CP      '9' + 1             ; Is the hex digit > 9?
+        JR      C,N2C1              ; Yes - Jump / No - Continue
+        ADD     A,'A' - '0' - 0Ah   ; Adjust for A-F
 N2C1:
         RET
 
@@ -223,7 +223,7 @@ SHFTNIB:
 PRINTHNIB:
         PUSH    AF
         CALL    NIB2CHAR
-        CALL    PRINT_CHAR        	;Print the nibble
+        CALL    PRINT_CHAR      ; Print the nibble
         POP     AF
         RET
         
@@ -232,16 +232,16 @@ PRINTHNIB:
 ;Function: Prints a byte in hex notation from Acc to the serial line.
 ;***************************************************************************		
 PRINTHBYTE:
-        PUSH    AF      ;Save registers
+        PUSH    AF              ; Save registers
         PUSH    DE
-        LD      D,A     ;Save for low nibble
-        RRCA            ;Rotate high nibble into low nibble
+        LD      D,A             ; Save for low nibble
+        RRCA                    ; Rotate high nibble into low nibble
         RRCA
         RRCA
         RRCA
-        CALL    PRINTHNIB       ;Print high nibble
-        LD      A,D             ;Restore for low nibble
-        CALL    PRINTHNIB       ;Print low nibble
+        CALL    PRINTHNIB       ; Print high nibble
+        LD      A,D             ; Restore for low nibble
+        CALL    PRINTHNIB       ; Print low nibble
         POP     DE
         POP     AF
         RET
@@ -254,9 +254,9 @@ PRINTHWORD:
 ;       PUSH    HL
         PUSH    AF
         LD      A,H
-        CALL    PRINTHBYTE      ;Print high byte
+        CALL    PRINTHBYTE      ; Print high byte
         LD      A,L
-        CALL    PRINTHBYTE      ;Print low byte
+        CALL    PRINTHBYTE      ; Print low byte
         POP     AF
 ;       POP     HL
         RET
@@ -314,7 +314,7 @@ P8B_RET:
 CHARS2BYTE:
         PUSH    BC
         LD      A, (HL)
-        CALL    CHAR2NIB        ; get upper nibble from char
+        CALL    CHAR2NIB        ; Get upper nibble from char
         RLC     A
         RLC     A
         RLC     A
@@ -322,7 +322,7 @@ CHARS2BYTE:
         LD      B, A
         INC     HL
         LD      A, (HL)
-        CALL    CHAR2NIB        ; get lower nibble from char
+        CALL    CHAR2NIB        ; Get lower nibble from char
         OR      B
         LD      A, B
         POP     BC

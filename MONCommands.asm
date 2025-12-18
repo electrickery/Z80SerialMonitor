@@ -34,7 +34,9 @@ HLPMSG8: DEFB '+ - print next block of memory', 0Dh, 0Ah, EOS
 HLPMSG9: DEFB '- - print previous block of memory', 0Dh, 0Ah, EOS
 
 HELP_COMMAND:
-        LD      HL, HLPMSG1     ;Print some messages
+        LD      HL, HLPMSG1     ; Print some messages
+        CALL    PRINT_STRING
+        LD      HL, MNMSG3     ; Version and locations
         CALL    PRINT_STRING
         LD      HL, HLPMSG2
         CALL    PRINT_STRING

@@ -8,46 +8,47 @@
 ;***************************************************************************
 
 VERSMYR:    EQU     '1'
-VERSMIN:    EQU     '1'
+VERSMIN:    EQU     '2'
 
             INCLUDE CONSTANTS.asm ; copy or edit one of the 
                                   ; CONSTANTS-aaaa-pp.asm files to
                                   ; CONSTANTS.asm
+
 SCAN        EQU     005FEh
 
 ;ROM_BOTTOM:  EQU    0F000h		; Bottom address of ROM
 ROM_TOP:     EQU    ROM_BOTTOM + 00FFFh		; Top address of ROM
 
 ;RAM_BOTTOM:  EQU    01800h		; Bottom address of RAM
-RAM_TOP:     EQU    RAM_BOTTOM + 1FFh		; Top address of RAM	
+RAM_TOP:     EQU    RAM_BOTTOM + 1FFh		; Top address of RAM
 
 ;UART_BASE:  EQU     0E0h        ; Base port address, DART uses 4 ports
 
-MPFMON:     EQU    0000h
-ASCDMPBUF:  EQU    RAM_BOTTOM + 0h      ;Buffer to construct ASCII part of memory dump
-ASCDMPEND:  EQU    RAM_BOTTOM + 10h     ;End of buffer, fill with EOS
-DMPADDR:    EQU    RAM_BOTTOM + 11h     ;Last dump address
-MVADDR:     EQU    RAM_BOTTOM + 12h     ; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
-ERRFLAG:    EQU    RAM_BOTTOM + 18h     ; Location to store 
-MUTE:       EQU    RAM_BOTTOM + 19h     ; 0 - print received chars, 1 - do not print received chars
-ULSIZE:     EQU    RAM_BOTTOM + 1Ah     ; actual size of current/last hex-intel message
-IECHECKSUM: EQU    RAM_BOTTOM + 1Bh        ; hex-intel record checksum
-IECADDR:    EQU    RAM_BOTTOM + 1Ch        ; hex-intel record address (2 bytes)
-IERECTYPE:  EQU    RAM_BOTTOM + 1Eh        ; hex-intel record type
-DEBUG:      EQU    RAM_BOTTOM + 1Fh
-MTPHFLAG    EQU    RAM_BOTTOM + 1Fh     ; Phase counter: phase 1 doesn't check old value (being unknown)
-RX_READ_P:  EQU    RAM_BOTTOM + 20h     ; read pointer
-RX_WRITE_P: EQU    RAM_BOTTOM + 22h     ; write pointer
-CHKSUM_C:   EQU    RAM_BOTTOM + 24h     ; uses 3 bytes
-CF_SECCNT:  EQU    RAM_BOTTOM + 27h 
-CF_LBA0:    EQU    RAM_BOTTOM + 28h
-CF_LBA1:    EQU    RAM_BOTTOM + 29h
-CF_LBA2:    EQU    RAM_BOTTOM + 2Ah
-CF_LBA3:    EQU    RAM_BOTTOM + 2Bh
-UPLOADBUF:  EQU    RAM_BOTTOM + 2Ch     ; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
-ULBUFSIZE:  EQU    50h                  ; a 20h byte hex-intel record use 75 bytes...
-ULBEND:     EQU    UPLOADBUF + ULBUFSIZE
-MSGBUF:     EQU    UPLOADBUF
+MPFMON:     EQU     0000h
+ASCDMPBUF:  EQU     RAM_BOTTOM + 0h      ;Buffer to construct ASCII part of memory dump
+ASCDMPEND:  EQU     RAM_BOTTOM + 10h     ;End of buffer, fill with EOS
+DMPADDR:    EQU     RAM_BOTTOM + 11h     ;Last dump address
+MVADDR:     EQU     RAM_BOTTOM + 12h     ; 6 bytes: start-address, end-address, dest-address or fill-value (23, 24, 25, 26, 27, 28)
+ERRFLAG:    EQU     RAM_BOTTOM + 18h     ; Location to store 
+MUTE:       EQU     RAM_BOTTOM + 19h     ; 0 - print received chars, 1 - do not print received chars
+;ULSIZE:     EQU    RAM_BOTTOM + 1Ah     ; actual size of current/last hex-intel message
+;IECHECKSUM: EQU    RAM_BOTTOM + 1Bh        ; hex-intel record checksum
+;IECADDR:    EQU    RAM_BOTTOM + 1Ch        ; hex-intel record address (2 bytes)
+;IERECTYPE:  EQU    RAM_BOTTOM + 1Eh        ; hex-intel record type
+DEBUG:      EQU     RAM_BOTTOM + 1Fh     ; 
+MTPHFLAG    EQU     RAM_BOTTOM + 1Fh     ; Phase counter: phase 1 doesn't check old value (being unknown)
+RX_READ_P:  EQU     RAM_BOTTOM + 20h     ; read pointer
+RX_WRITE_P: EQU     RAM_BOTTOM + 22h     ; write pointer
+CHKSUM_C:   EQU     RAM_BOTTOM + 24h     ; uses 3 bytes
+CF_SECCNT:  EQU     RAM_BOTTOM + 27h 
+CF_LBA0:    EQU     RAM_BOTTOM + 28h
+CF_LBA1:    EQU     RAM_BOTTOM + 29h
+CF_LBA2:    EQU     RAM_BOTTOM + 2Ah
+CF_LBA3:    EQU     RAM_BOTTOM + 2Bh
+UPLOADBUF:  EQU     RAM_BOTTOM + 2Ch     ; Buffer for hex-intel upload. Allows up to 32 bytes (20h) per line.
+ULBUFSIZE:  EQU     50h                  ; a 20h byte hex-intel record use 75 bytes...
+ULBEND:     EQU     UPLOADBUF + ULBUFSIZE
+MSGBUF:     EQU     UPLOADBUF
 
 ; Error codes intel Hex record
 E_NONE:     EQU    00h
@@ -85,23 +86,23 @@ R_PRT_STR:  JP      PRINT_STRING    ; sends a NULL terminated string
 ;Function: Entrance to user program
 ;***************************************************************************
 MAIN:
-			LD		SP,RAM_TOP			;Load the stack pointer for stack operations.
-			CALL	UART_INIT			;Initialize UART
-			CALL	PRINT_MON_HDR		;Print the monitor header info
-			LD		A, 00h
-			LD		(DMPADDR), A
-			LD		A, 0FFh				; FF00h and next should result in 0000h
-			LD		(DMPADDR+1), A
-			CALL	CLEAR_ERROR
-			CALL    MON_PROMPT_LOOP		;Monitor user prompt loop
-			HALT
+        LD      SP,RAM_TOP          ; Load the stack pointer for stack operations.           
+        CALL    UART_INIT           ; Initialize UART
+        CALL    PRINT_MON_HDR       ; Print the monitor header info
+        LD      A, 00h
+        LD      (DMPADDR), A
+        LD      A, 0FFh             ; FF00h and next should result in 0000h
+        LD      (DMPADDR+1), A
+        CALL    CLEAR_ERROR
+        CALL    MON_PROMPT_LOOP     ; Monitor user prompt loop
+        HALT
 
 ;***************************************************************************
 ;CLEAR_SCREEN
 ;Function: Clears terminal screen
 ;***************************************************************************
-MON_CLS: DEFB 0Ch, EOS  				;Escape sequence for CLS. (aka form feed) 
-		
+MON_CLS: DEFB 0Ch, EOS          ; Escape sequence for CLS. (aka form feed) 
+
 CLEAR_SCREEN:
 			LD 		HL,MON_CLS
 			CALL    PRINT_STRING
@@ -112,20 +113,24 @@ CLEAR_SCREEN:
 ;Function: Software Reset to $0000
 ;***************************************************************************
 RESET_COMMAND:
-			JP		MPFMON				;Jumps to 0000 (MPF-1 monitor re-entry)	
-			
+        JP      MPFMON          ; Jumps to 0000 (MPF-1 monitor re-entry)	
+
 ;***************************************************************************
 ;PRINT_MON_HDR
 ;Function: Print out program header info
 ;***************************************************************************
 MNMSG1:     DEFB    0DH, 0Ah, 'ZMC80 Computer', 09h, 09h, 09h, '2015 MCook', EOS
 MNMSG2:     DEFB    0DH, 0Ah, ' adaptation to MPF-1 / Z80 DART', 09h, '2022 F.J.Kraan', 0Dh, 0Ah, EOS
-MNMSG3A:    DEFB    'Monitor v', VERSMYR, '.', VERSMIN, ', ROM: ', EOS
-MNMSG3B:    DEFB    'h, RAM: ', EOS
-MNMSG3C:    DEFB    'h, DART: ', EOS
-MNMSG3D:    DEFB    'h', 0Dh, 0AH, 0Dh, 0AH, EOS
 MONHLP:     DEFB    09h,' Input ? for command list', 0Dh, 0AH, EOS
 MONERR:     DEFB    0Dh, 0AH, 'Error in params: ', EOS
+
+; Version & location string, see conditionals in CONSTANTS.asm
+MNMSG3:     DEFB    'Monitor v', VERSMYR, '.', VERSMIN, ', ROM: '
+MNROMB:     DEFB    ROMB1, ROMB2, ROMB3, ROMB4
+            DEFB    'h, RAM: '
+MNRAMB:     DEFB    RAMB1, RAMB2, RAMB3, RAMB4
+            DEFB    'h, DART: '
+MNUARTB:    DEFB    UARTB1, UARTB2, 'h', 0Dh, 0AH, 0Dh, 0AH, EOS
 
 PRINT_MON_HDR:
         CALL    CLEAR_SCREEN        ;Clear the terminal screen
@@ -133,23 +138,12 @@ PRINT_MON_HDR:
         CALL    PRINT_STRING
         LD      HL, MNMSG2          ;Print some extra message
         CALL    PRINT_STRING
-        LD      HL, MNMSG3A         ; 1st part, version & ROM
-        CALL    PRINT_STRING
-        LD      HL, ROM_BOTTOM
-        CALL    PRINTHWORD
-        LD      HL, MNMSG3B         ; 2nd part, RAM
-        CALL    PRINT_STRING
-        LD      HL, RAM_BOTTOM
-        CALL    PRINTHWORD
-        LD      HL, MNMSG3C         ; 3rd part UART
-        CALL    PRINT_STRING
-        LD      A, UART_BASE
-        CALL    PRINTHBYTE
-        LD      HL, MNMSG3D         ; 4th part, line ending
+        LD      HL, MNMSG3
         CALL    PRINT_STRING
         LD      HL, MONHLP
         CALL    PRINT_STRING
         RET
+
 
 ;***************************************************************************
 ;MON_PROMPT
@@ -268,4 +262,13 @@ CLEAR_ERROR:
         INCLUDE hex-load-dart.asm
 ;        INCLUDE CFDriver.asm
 
+        ORG     ROM_BOTTOM + 0FFCh
+UART1DATP:
+        DB      UART_1DAT
+UART1CTLP
+        DB      UART_1CTL
+UART2DATP:
+        DB      UART_2DAT
+UART2CTLP:
+        DB      UART_2CTL
         END
