@@ -27,10 +27,10 @@ UART_INIT:
         LD      C, UART_1CTL
         LD      B, E_DRTTB - DRTTB
         OTIR                    ; write bytes from DRTTB to port DRTCTL
-;        LD      HL, DRTTB
-;        LD      C, UART_2CTL
-;        LD      B, E_DRTTB - DRTTB
-;        OTIR                    ; write bytes from DRTTB to port DRT2CTL      
+        LD      HL, DRTTB
+        LD      C, UART_2CTL
+        LD      B, E_DRTTB - DRTTB
+        OTIR                    ; write bytes from DRTTB to port DRT2CTL      
         RET
 
 DRTTB:                      ; alternate register select and values (not for WR0)
